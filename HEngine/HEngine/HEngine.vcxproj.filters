@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{77b55a8e-b2a0-4670-9b62-16e70b9d8b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pch">
+      <UniqueIdentifier>{2a70a21c-6786-424e-8277-f3729ae013a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine">
+      <UniqueIdentifier>{13619520-69a9-4c6b-a19c-475316c58cbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Other">
+      <UniqueIdentifier>{963d68e2-d7c8-44f0-97ce-ca467a4b7a07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\EngineInterface">
+      <UniqueIdentifier>{c16e2666-12cb-46ea-b9d4-44bdd99163e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{ce5085f4-13c8-467d-8ed3-7e23590a1975}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HModelManager">
+      <UniqueIdentifier>{28a16724-89ba-41fb-9a57-20df9927d2e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline">
+      <UniqueIdentifier>{5c6c66a3-087e-4b98-97be-8810b43ffdbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HPassConstant">
+      <UniqueIdentifier>{f1139a0c-5309-4097-bf2e-5362b7fe3146}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Other\HFBXImporter">
+      <UniqueIdentifier>{05bd5016-babe-4998-92b9-5b696fd72539}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HSimplePrimitive">
+      <UniqueIdentifier>{ea9707c4-5763-4db0-b3de-e1c7715d7134}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Other\StructureHelper">
+      <UniqueIdentifier>{dba7ee43-553c-4b2c-b856-409cef90b785}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Other\BufferHelper">
+      <UniqueIdentifier>{628a96bf-9f96-4ed4-bfae-bd0cc3042881}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\UIManager">
+      <UniqueIdentifier>{906926b2-c33b-482a-b70b-44845f68598a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Other\SelfFormatReader">
+      <UniqueIdentifier>{84f43da8-085a-4ff8-8505-3736750e7486}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>pch</Filter>
+    </ClCompile>
+    <ClCompile Include="HEngine.cpp">
+      <Filter>Source\MainEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceResources.cpp">
+      <Filter>Source\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineInterface.cpp">
+      <Filter>Source\EngineInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="HRasterize.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="HRaytracing.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="HModelManager.cpp">
+      <Filter>Source\MainEngine\HModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="HPassConstant.cpp">
+      <Filter>Source\MainEngine\HPassConstant</Filter>
+    </ClCompile>
+    <ClCompile Include="HGraphicPipeline.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="HTextureManager.cpp">
+      <Filter>Source\MainEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="HFBXImporter.cpp">
+      <Filter>Source\Other\HFBXImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="HPicking.cpp">
+      <Filter>Source\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="HSimplePrimitiveManager.cpp">
+      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+    </ClCompile>
+    <ClCompile Include="HSimplePrimitiveStructs.cpp">
+      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+    </ClCompile>
+    <ClCompile Include="HManagerController.cpp">
+      <Filter>Source\Other\StructureHelper</Filter>
+    </ClCompile>
+    <ClCompile Include="HModelManagerStructs.cpp">
+      <Filter>Source\MainEngine\HModelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="HBufferManager.cpp">
+      <Filter>Source\Other\BufferHelper</Filter>
+    </ClCompile>
+    <ClCompile Include="d3dUtil.cpp">
+      <Filter>Source\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="HComputeLighting.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="HUIManager.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+    </ClCompile>
+    <ClCompile Include="HUIManagerDefines.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+    </ClCompile>
+    <ClCompile Include="HSelfFormatReader.cpp">
+      <Filter>Source\Other\SelfFormatReader</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="HEngine.h">
+      <Filter>Source\MainEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Library\Library_Code\StepTimer.h">
+      <Filter>Source\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceResources.h">
+      <Filter>Source\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineInterface.h">
+      <Filter>Source\EngineInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="HRasterize.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HRaytracing.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HRasterizeDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HModelManager.h">
+      <Filter>Source\MainEngine\HModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="HPassConstantDefines.h">
+      <Filter>Source\MainEngine\HPassConstant</Filter>
+    </ClInclude>
+    <ClInclude Include="HPassConstant.h">
+      <Filter>Source\MainEngine\HPassConstant</Filter>
+    </ClInclude>
+    <ClInclude Include="HGraphicPipeline.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HRaytracingDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HTextureManager.h">
+      <Filter>Source\MainEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="HFBXImporter.h">
+      <Filter>Source\Other\HFBXImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="HFbxUtil.h">
+      <Filter>Source\Other\HFBXImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="HPicking.h">
+      <Filter>Source\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="HModelRawData.h">
+      <Filter>Source\MainEngine\HModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="HSimplePrimitiveManager.h">
+      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+    </ClInclude>
+    <ClInclude Include="HSimplePrimitiveStructs.h">
+      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+    </ClInclude>
+    <ClInclude Include="HManagerController.h">
+      <Filter>Source\Other\StructureHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="HModelManagerStructs.h">
+      <Filter>Source\MainEngine\HModelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="HBufferManager.h">
+      <Filter>Source\Other\BufferHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dUtil.h">
+      <Filter>Source\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="HComputeLighting.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HComputeLightingDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="HUIManager.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+    </ClInclude>
+    <ClInclude Include="HUIManagerDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+    </ClInclude>
+    <ClInclude Include="HSelfFormatDefines.h">
+      <Filter>Source\Other\SelfFormatReader</Filter>
+    </ClInclude>
+    <ClInclude Include="HSelfFormatReader.h">
+      <Filter>Source\Other\SelfFormatReader</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\Raytracing.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SkinAnim_Raytracing.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_DS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_HS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\tess_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\twoMatLerp_DS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\twoMatLerp_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\default_PS_deffered.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\twoMatLerp_PS_deffered.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\deferredRender_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\lighting.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\shadow_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ui_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ui_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ui_structure.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ssao_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SceneVariables.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RasterizeRootSig.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
