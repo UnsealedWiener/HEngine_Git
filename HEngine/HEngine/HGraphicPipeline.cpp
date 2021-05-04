@@ -19,7 +19,7 @@ void HGraphicPipeline::Initialize(GraphicsMemory* pGraphicsMemory, DeviceResourc
 
 	m_computeLighting.Initialize(pDeviceResources, pPassConstant);
 
-	if (m_bRayracingSupported == true)
+	//if (m_bRayracingSupported == true)
 		m_raytracing.Initialize(pDeviceResources, pModelManager, pPassConstant, pTextureManager);
 
 	m_pSimplePrimitiveManager = HSimplePrimitiveManager::GetInstance();
@@ -36,7 +36,7 @@ void HGraphicPipeline::Update()
 {
 	m_pModelManager->UpdateAllInstancedBoneAnimResource_common();
 
-	if (m_bRayracingSupported&&m_bReflection)
+	if (m_bRayracingSupported && m_bReflection)
 	{
 		m_pModelManager->UpdateResouce_raytracing();
 		m_raytracing.Update();
@@ -63,19 +63,17 @@ void HGraphicPipeline::Draw()
 		m_rasterize.ClearShadowBuffer();
 	}
 
-	if (m_bRayracingSupported)
+	if (m_bRayracingSupported && m_bReflection)
 	{
-		if (m_bReflection)
-		{
-			m_raytracing.Draw();
-		}
-		else
-		{
-			m_raytracing.ClearBuffer(m_reflectionBuffer.Get(),
-				m_pDescriptorHeap_nonShaderVisible_forClear->
-				GetCpuHandle((UINT)DescriptorList_NonShaderVisible_GraphicPipiline::eReflection));
-		}
+		m_raytracing.Draw();
 	}
+	else
+	{
+		m_raytracing.ClearBuffer(m_reflectionBuffer.Get(),
+			m_pDescriptorHeap_nonShaderVisible_forClear->
+			GetCpuHandle((UINT)DescriptorList_NonShaderVisible_GraphicPipiline::eReflection));
+	}
+
 
 	{
 		D3D12_RESOURCE_BARRIER barrier[6] = {
@@ -125,7 +123,7 @@ void HGraphicPipeline::Draw()
 
 		commandList->ResourceBarrier(9, barrier);
 	}
-	
+
 	commandList->CopyResource(backBuffer, m_resultBuffer.Get());
 
 	{
@@ -149,11 +147,11 @@ void HGraphicPipeline::CreateWindowSizeDependetResources()
 
 	m_rasterize.CreateDescriptors(m_albedoBuffer.Get(), m_metallicRoughnessAoBuffer.Get(), m_normalBuffer.Get(), m_shadowBuffer.Get());
 	m_computeLighting.CreateDescriptors(m_albedoBuffer.Get(), m_metallicRoughnessAoBuffer.Get(), m_normalBuffer.Get(),
-		m_pDeviceResources->GetDepthStencil(), m_reflectionBuffer.Get(), m_shadowBuffer.Get(),m_randomVectorBuffer.Get(),m_ssaoBuffer.Get(), m_resultBuffer.Get());
+		m_pDeviceResources->GetDepthStencil(), m_reflectionBuffer.Get(), m_shadowBuffer.Get(), m_randomVectorBuffer.Get(), m_ssaoBuffer.Get(), m_resultBuffer.Get());
 	m_pSimplePrimitiveManager->CreateWindowSizeDependentResources();
 	m_pHUIManager->CreateWindowSizeDependentResources();
 
-	if (m_bRayracingSupported)
+	//if (m_bRayracingSupported)
 		m_raytracing.CreateDescriptors(m_reflectionBuffer.Get(), m_normalBuffer.Get(), m_pDeviceResources->GetDepthStencil());
 }
 
@@ -167,7 +165,7 @@ void HGraphicPipeline::CreateDeviceDependentResources(ResourceUploadBatch& resou
 	m_computeLighting.CreateDeviceDependentResources();
 	m_pHUIManager->CreateDeviceDependentResource(resourceBatch);
 
-	if (m_bRayracingSupported)
+	//if (m_bRayracingSupported)
 		m_raytracing.CreateDeviceDependentResources(resourceBatch);
 }
 
@@ -255,7 +253,7 @@ void HGraphicPipeline::CreateGBuffers()
 
 	resDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	resDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-	
+
 	DX::ThrowIfFailed(device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -377,7 +375,7 @@ void HGraphicPipeline::CreateRandomVectorBuffer(ResourceUploadBatch& resourceBat
 			initData[512 * i + j] = Color((float)(rand() / (float)RAND_MAX),
 				(float)(rand() / (float)RAND_MAX), (float)(rand() / (float)RAND_MAX), 0.f);
 		}
-		
+
 
 	}
 

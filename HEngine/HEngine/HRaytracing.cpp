@@ -21,9 +21,12 @@ void HRaytracing::Initialize(DeviceResources* pDeviceResources, HModelManager* p
 
 void HRaytracing::CreateDeviceDependentResources(ResourceUploadBatch& resourceBatch)
 {
-	CreateRaytracingRootSignature();
-	CreateRaytracingStateObject();
-	CreateShaderBindingTable(resourceBatch);
+	if (m_pDeviceResources->IsRaytracingSupported())
+	{
+		CreateRaytracingRootSignature();
+		CreateRaytracingStateObject();
+		CreateShaderBindingTable(resourceBatch);
+	}
 
 	m_pDescriptorHeap_SRVUAV =
 		std::make_unique<DescriptorHeap>(m_pDeviceResources->GetD3DDevice(), (UINT)SRVUAVDescriptorHeapOffset_Raytracing::MaxCount);
@@ -129,9 +132,6 @@ void HRaytracing::Update()
 
 void HRaytracing::Draw()
 {
-	if (m_pModelManager->m_models.size() == 0)
-		return;
-
 	auto pCommandList = m_pDeviceResources->GetRaytracingCommandList();
 	UINT currentFrame = m_pDeviceResources->GetCurrentFrameIndex();
 	auto size = m_pDeviceResources->GetOutputSize();
@@ -155,11 +155,13 @@ void HRaytracing::Draw()
 		m_pModelManager->m_pTopLevelAccelerationStructures[currentFrame]->GetGPUVirtualAddress());
 	pCommandList->SetComputeRootConstantBufferView((UINT)RootSig_Raytracing::PassConstant,
 		m_pPassConstant->GetPassConstantGpuAddress());
+	if(m_pModelManager->m_allIndicesResource)
 	pCommandList->SetComputeRootShaderResourceView((UINT)RootSig_Raytracing::IndexBuffer,
 		m_pModelManager->m_allIndicesResource->GetGPUVirtualAddress());
+	if(m_pModelManager->m_allVerticesResource)
 	pCommandList->SetComputeRootShaderResourceView((UINT)RootSig_Raytracing::VertexBuffer,
 		m_pModelManager->m_allVerticesResource->GetGPUVirtualAddress());
-	if(m_pModelManager->m_pAllInstacedVertices.Get()!=nullptr)
+	if(m_pModelManager->m_pAllInstacedVertices)
 	pCommandList->SetComputeRootShaderResourceView((UINT)RootSig_Raytracing::VertexBuffer_Dynamic,
 		m_pModelManager->m_pAllInstacedVertices->GetGPUVirtualAddress());
 	if(m_pModelManager->m_raytracingStructuredBuffer_perInstance)

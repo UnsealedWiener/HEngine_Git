@@ -175,8 +175,12 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 		//	color = float3(1, 0, 0);
 	}
 	else
-		color = reflect.xyz;
-
+	{
+		if (dot(reflect.xyz, float3(1.f, 1.f, 1.f)) == 0)
+			color = float3(0.5f, 0.5f, 0.5f);
+		else
+			color = reflect.xyz;
+	}
 
 
 	//float Gamma = 1.0f / 2.2f;

@@ -45,6 +45,9 @@ void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
 	device->CreateShaderResourceView(m_skybox.Get(), &srvDesc, m_skyboxDescriptorHeap->GetCpuHandle(0));
+
+	m_bRasterizeDirty = true;
+	m_bRaytracingDirty = true;
 }
 
 HMaterialData* HTextureManager::CreateMaterial(ResourceUploadBatch& batch, const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height)

@@ -37,22 +37,15 @@ void HRasterize::Initialize(DeviceResources* pDeviceResources, HModelManager* pM
 
 void HRasterize::DrawGBuffer(bool wireframe)
 {
-	if (m_pModelManager->m_models.size() == 0)
-		return;
-
 	auto backBuffer = m_pDeviceResources->GetRenderTarget();
 	auto commandList = m_pDeviceResources->GetCommandList();
-	m_pDeviceResources->SetScreenSizeViewport();
 
-	unsigned char currentPSO = 0;
-	if (wireframe)
-		currentPSO |= WIREFRAME_PSO;
 
 	PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Clear");
 
 	{
 		FLOAT zero[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	
+
 		auto rtvCPU = m_pDescriptorHeap_RTV->GetFirstCpuHandle();
 		auto dsvCPU = m_pDeviceResources->GetDepthStencilView();
 
@@ -65,6 +58,15 @@ void HRasterize::DrawGBuffer(bool wireframe)
 	}
 
 	PIXEndEvent(commandList);
+
+	if (m_pModelManager->m_models.size() == 0|| m_pModelManager->m_visibleInstance == 0)
+		return;
+
+	m_pDeviceResources->SetScreenSizeViewport();
+
+	unsigned char currentPSO = 0;
+	if (wireframe)
+		currentPSO |= WIREFRAME_PSO;
 
 	PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Render G-Buffer");
 
@@ -147,7 +149,7 @@ void HRasterize::DrawGBuffer(bool wireframe)
 
 void HRasterize::DrawShadow()
 {
-	if (m_pModelManager->m_models.size() == 0)
+	if (m_pModelManager->m_models.size() == 0|| m_pModelManager->m_instances.size() == 0)
 		return;
 
 	auto commandList = m_pDeviceResources->GetCommandList();
