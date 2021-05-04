@@ -135,39 +135,54 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	m_keyboard = m_p3DgraphicEngine->GetKeyboard();
 	m_pMouse = m_p3DgraphicEngine->GetMouse();
 
-
 	//그래픽 자원을 만들 때 StartSetting을 호출
 	//그래픽 카드에 여러 명령을 한번에 보내주기 위함
 	m_p3DgraphicEngine->StartSetting();
 
 	//디폴트 스카이박스 세팅
-	//m_p3DgraphicEngine->LoadSkyBox(L"Media/Skybox/Skybox.dds");
+	m_p3DgraphicEngine->LoadSkyBox(L"Media/Skybox/Skybox.dds");
 	//디폴트 폰트 세팅
 	m_p3DgraphicEngine->LoadFont(L"Media/Fonts/SegoeUI_18.spritefont");
 
 	HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD3.hmodel");
-	//HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD3.hmodel");
-	//m_p3DgraphicEngine->SetReflectionEffect(false);
-	
+	HModelData* pHModel_Field = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Field0/Field0.hmodel");
+
 	std::vector<std::string> animList;
 	animList.push_back("Media/Model/Crunch/Crunch@idle.hanim");
 	animList.push_back("Media/Model/Crunch/Crunch@attack01.hanim");
 
 	HAnimData* pHAnim = m_p3DgraphicEngine->CreateAnimationFromHAnimFiles(animList);
 
+	HMaterialData* pHMat_Spaceshipt = m_p3DgraphicEngine->CreateMaterial(L"Media/Material/spaceShip/spaceShip_albedo.png",
+		L"Media/Material/spaceShip/spaceShip_roughness.png",
+		L"Media/Material/spaceShip/spaceShip_metallic.png",
+		L"Media/Material/spaceShip/spaceShip_ao.png",
+		L"Media/Material/spaceShip/spaceShip_normal.png",
+		L"Media/Material/spaceShip/spaceShip_height.png");
+
+	HMaterialData* pHMat_Bamboo = m_p3DgraphicEngine->CreateMaterial(L"Media/Material/bamboo/bamboo_albedo.png",
+		L"Media/Material/bamboo/bamboo_roughness.png",
+		L"Media/Material/bamboo/bamboo_metallic.png",
+		L"Media/Material/bamboo/bamboo_ao.png",
+		L"Media/Material/bamboo/bamboo_normal.png",
+		nullptr);
+
 	//그래픽 자원을 생성하는 명령을 그래픽 카드에 보내줌
 	//이후 모든 명령이 수행될 때까지 기다린다.
 	m_p3DgraphicEngine->FinishSetting();
 
-
-
-
-	//pHModel_Crunch->SetAnimation(pHAnim);
+	pHModel_Crunch->SetAnimation(pHAnim);
 
 	m_p3DgraphicEngine->GetCamera()->LookAt(Vector3(0, 500, -500), Vector3(0, 0, 0), Vector3(0, 1, 0));
 
-	//HInstanceData* pHinstance = pHModel_Crunch->AddInstance(eNoOption_EI);
-	//pHinstance->worldTM = Matrix();
+	m_pMyCharacter = pHModel_Crunch->AddInstance(eNoOption_EI);
+	m_pMyCharacter->SetMaterial(pHMat_Spaceshipt);
+	m_pMyCharacter->animationName = "idle";
+
+	pHModel_Field->AddInstance(eNoOption_EI)->SetMaterial(pHMat_Bamboo);
+
+	HLightData* pLightData =  m_p3DgraphicEngine->CreateLight(LightType::eDirectLight);
+	pLightData->strength = Vector3(0.7f, 0.7f, 0.7f);
 
 	AddGrid();
 
@@ -177,9 +192,47 @@ void ExampleGame::Loop()
 {
 	float dTime = m_p3DgraphicEngine->GetElapsedTime();
 
+	m_pMyCharacter->animationTime += dTime;
+
 	m_keyboardTracker.Update(m_keyboard->GetState());
 	m_mouseTracker.Update(m_pMouse->GetState());
 
+	Camera* camera =  m_p3DgraphicEngine->GetCamera();
+
+	//free camera
+	{
+		if (m_keyboardTracker.GetLastState().W)
+			camera->Walk(50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().S)
+			camera->Walk(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().A)
+			camera->Strafe(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().D)
+			camera->Strafe(+50.0f * dTime);
+
+		static int lastPosX = 0;
+		static int lastPosY = 0;
+
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
+		{
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
+		}
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::HELD)
+		{
+			int xVec = m_mouseTracker.GetLastState().x - lastPosX;
+			int yVec = m_mouseTracker.GetLastState().y - lastPosY;
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
+
+			float dx = XMConvertToRadians(0.25f * static_cast<float>(xVec));
+			float dy = XMConvertToRadians(0.25f * static_cast<float>(yVec));
+
+			camera->Pitch(dy);
+			camera->RotateY(dx);
+		}
+
+	}
 	m_p3DgraphicEngine->Loop();
 }
 

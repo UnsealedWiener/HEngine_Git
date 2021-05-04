@@ -44,6 +44,7 @@ void HRasterize::DrawGBuffer(bool wireframe)
 	PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Clear");
 
 	{
+		m_pDeviceResources->SetScreenSizeViewport();
 		FLOAT zero[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 		auto rtvCPU = m_pDescriptorHeap_RTV->GetFirstCpuHandle();
@@ -58,11 +59,12 @@ void HRasterize::DrawGBuffer(bool wireframe)
 	}
 
 	PIXEndEvent(commandList);
+	
 
 	if (m_pModelManager->m_models.size() == 0|| m_pModelManager->m_visibleInstance == 0)
 		return;
 
-	m_pDeviceResources->SetScreenSizeViewport();
+
 
 	unsigned char currentPSO = 0;
 	if (wireframe)
@@ -140,9 +142,6 @@ void HRasterize::DrawGBuffer(bool wireframe)
 				pModel->vertexOffsetInEntireBuffer, 0);
 		}
 	}
-
-
-	//DrawShadow();
 
 	PIXEndEvent(commandList);
 }

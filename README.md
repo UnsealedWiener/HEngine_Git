@@ -5,8 +5,8 @@
  It has dependency on DirectXTK(https://github.com/microsoft/DirectXTK) and FBX SDK.
  DirectXTK is already included in this repo but you have to download FBX SDK yourself to build this Engine.(details explained below)
  
- I also provided FBX Importer which changes .fbx file into my self format. HEngine can directly load .fbx files but it is slow
- so i recommend using my self format(.hmodel, .hanim) when you use this engine.
+ I also provided FBX Importer which changes fbx file into self format(hmodel, hanim). HEngine can directly load fbx files but it is slow
+ so i recommend using my self format when you use this engine.
  
 [how to build HEngine and HFbxImporter]
 
@@ -26,7 +26,7 @@
 
 The HEngine is built as static library. In order to use it, you have to follow instruction below. 
 
-1. Add the header files created in Output/HEngine/staticlibrary to your  game project.
+1. Add the header files created in Output/HEngine/staticlibrary to your game project.
 
 2. If you want to use DirectXTK mouse, keyboard and gamepad, add headers in "DirectXTKHeaders" to your game project as well.
 
@@ -38,9 +38,14 @@ The HEngine is built as static library. In order to use it, you have to follow i
 
 HFbxImporter is built as console application. 
 
+Curruntly i have tested fbx files only from 3D Max. 
+So fbx files from other graphic tool(ex. Blender, Maya) can goes wrong with HFbxImporter.
+
 1. Run .exe file created in Output/HFbxImporter/exe/Release/HFbxImporter.exe in cmd.
 
 2. Press enter and you will see detailed instruction.
+
+
 
 
 

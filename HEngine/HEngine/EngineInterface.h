@@ -84,7 +84,7 @@ struct HInstanceData : public HandleInterface
 	float animationLerpValue = 0;	//if this value is 0, first animation value is 100%
 
 	virtual void Delete() = 0;
-	virtual void SetMaterial(HMaterialData* pMaterial, unsigned int slot) = 0;
+	virtual void SetMaterial(HMaterialData* pMaterial, unsigned int slot = 0) = 0;
 		/**
 	 * Change Shader flag.
 	 *
@@ -244,6 +244,18 @@ public:
 	 * Submit commands to gpu for resource creation.
 	 */
 	void FinishSetting();
+
+	//**list of functions that should be called between  StartSetting() and FinishSetting()
+	/*
+	* CreateModelFromFbxFile
+	* CreateAnimationFromFbxFiles
+	* CreateModelFromHModelFile
+	* CreateAnimationFromHAnimFiles
+	* CreateMaterial
+	* CreateSprite
+	* LoadSkyBox
+	* LoadFont
+	*/
 
 	//----------------------------------------------------------------------------
 	/* Resource Loading Functions.

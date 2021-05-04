@@ -16,6 +16,8 @@ private:
 	Mouse* m_pMouse;
 	Mouse::ButtonStateTracker m_mouseTracker;
 
+	HInstanceData* m_pMyCharacter;
+
 
 public:
 	void Initialize(HINSTANCE hInstance, int clientWidth, int clientHeight);
