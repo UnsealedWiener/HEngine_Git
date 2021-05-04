@@ -20,6 +20,21 @@ HFbxImporter::~HFbxImporter()
 	m_pIOSettings->Destroy();
 	m_pImporter->Destroy();
 	m_pFbxManager->Destroy();
+
+	for (int i = 0; i < m_meshData.size(); i++)
+	{
+		delete m_meshData[i];
+	}
+
+	for (int i = 0; i < m_boneData.size(); i++)
+	{
+		delete m_boneData[i];
+	}
+
+	for (int i = 0; i < m_animData.allBoneAnim.size(); i++)
+	{
+		delete m_animData.allBoneAnim[i];
+	}
 }
 
 bool HFbxImporter::ImportModel(const char* filename)
@@ -59,7 +74,7 @@ bool HFbxImporter::ImportModel(const char* filename)
 	ProcessScene(pScene);
 
 	pScene->Destroy();
-
+	
 	GenerateNodeData();
 
 	return true;
