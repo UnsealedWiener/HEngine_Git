@@ -1,6 +1,7 @@
 # HEngine_Git
  
  The HEngine is 3D graphic Engine based on DirectX12.
+
  It has dependency on DirectXTK(https://github.com/microsoft/DirectXTK) and FBX SDK.
  DirectXTK is already included in this repo but you have to download FBX SDK yourself to build this Engine.(details explained below)
  
