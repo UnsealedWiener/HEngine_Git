@@ -24,6 +24,7 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 [HEngine을 게임에서 사용하는 법]
 
 HEngine은 스태틱 라이브러리로 빌드됩니다. 아래 설명대로 사용합니다.
+간단한 사용예시와 리소스는 ExampleGame이라는 프로젝트에 있으니 참고하시면 됩니다.
 
 1.  Output/HEngine/staticlibrary 경로에 있는 헤더 파일들을 게임 프로젝트에 추가합니다.
 
@@ -71,6 +72,7 @@ HFbxImporter는 콘솔 어플리케이션입니다.
 [how to use HEngine in your game]
 
 The HEngine is built as static library. In order to use it, you have to follow instruction below. 
+Simple example of a game and using HEngine and resources are in ExampleGame project.
 
 1. Add the header files created in Output/HEngine/staticlibrary to your game project.
 
