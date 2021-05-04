@@ -20,6 +20,8 @@ void HTextureManager::Initialize(ID3D12Device* device)
 	m_spriteDescriptorHeap = std::make_unique<DirectX::DescriptorHeap>(device,
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		MAX_SPRITE_DESCRIPTORHEAP_SIZE);
+
+	//CreateNullDescriptor(device, m_skyboxDescriptorHeap->GetFirstCpuHandle());
 }
 
 HMaterial* HTextureManager::GetMaterial(void* matHandle)
@@ -27,8 +29,10 @@ HMaterial* HTextureManager::GetMaterial(void* matHandle)
 	return m_materialList[matHandle].get();
 }
 
-void HTextureManager::LoadSkybox(ID3D12Device* device, ResourceUploadBatch& batch, const WCHAR* skybox)
+void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox)
 {
+	auto device = DX::DeviceResources::GetInstance()->GetD3DDevice();
+
 	DirectX::CreateDDSTextureFromFile(device,
 		batch, skybox, m_skybox.ReleaseAndGetAddressOf());
 
@@ -173,32 +177,32 @@ void HTextureManager::CreateSRVs_material(ID3D12Device* device, HMaterial* mater
 	*material->m_index = m_materialOffset;
 	
 	if (material->m_albedo == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_albedo.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 
 	if (material->m_roughness == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_roughness.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 
 	if (material->m_metallic == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_metallic.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 
 	if (material->m_ao == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_ao.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 
 	if (material->m_normal == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_normal.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 
 	if (material->m_height == nullptr)
-		CreateNullDescriptor(device, m_materialOffset++);
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_height.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 }
@@ -217,7 +221,7 @@ void HTextureManager::CreateSRV(ID3D12Device* device, ID3D12Resource* pResouce,
 	device->CreateShaderResourceView(pResouce, &srvDesc, pDescriptorHeap->GetCpuHandle(slot));
 }
 
-void HTextureManager::CreateNullDescriptor(ID3D12Device* device, UINT slot)
+void HTextureManager::CreateNullDescriptor(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -227,7 +231,7 @@ void HTextureManager::CreateNullDescriptor(ID3D12Device* device, UINT slot)
 	srvDesc.Texture2D.MipLevels = -1;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	
-	device->CreateShaderResourceView(nullptr, &srvDesc, m_materialDescriptorHeap->GetCpuHandle(slot));
+	device->CreateShaderResourceView(nullptr, &srvDesc, cpuHandle);
 }
 
 void HMaterial::Delete()

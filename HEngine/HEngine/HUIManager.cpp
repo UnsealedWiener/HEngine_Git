@@ -2,6 +2,8 @@
 #include"HUIManager.h"
 #include"DeviceResources.h"
 #include"HTextureManager.h"
+#include"HModelManager.h"
+#include"StepTimer.h"
 #include"d3dUtil.h"
 
 #include"ui_PS.hlsl.h"
@@ -15,45 +17,20 @@ HUIManager* HUIManager::GetInstance()
 	return &uiManager;
 }
 
-void HUIManager::Initialize(GraphicsMemory* pGraphicMemory, DeviceResources* pDeviceResources, HTextureManager* pTextureManager)
+void HUIManager::Initialize(GraphicsMemory* pGraphicMemory, DeviceResources* pDeviceResources, HTextureManager* pTextureManager,
+	HModelManager* pModelManager, StepTimer* pStepTimer)
 {
 	m_pDeviceResources = pDeviceResources;
 	m_pTextureManager = pTextureManager;
 	m_pGraphicMemory = pGraphicMemory;
+	m_pModelManager = pModelManager;
+	m_pStepTimer = pStepTimer;
 }
 
 void HUIManager::Draw()
 {
-	if (m_uiList.size() == 0)
-		return;
-
-	m_pDeviceResources->SetUiViewPort();
-
-	auto commandList = m_pDeviceResources->GetCommandList();
-	auto rtv = m_pDeviceResources->GetRenderTargetView();
-	auto dsv = m_pDeviceResources->GetDepthStencilView();
-	commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
-
-	commandList->SetPipelineState(m_PSO.Get());
-	commandList->SetGraphicsRootSignature(m_pRootSignature.Get());
-	commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	D3D12_VERTEX_BUFFER_VIEW vbv = GetVertexBufferView();
-	D3D12_INDEX_BUFFER_VIEW ibv = GetIndexBufferView();
-	commandList->IASetVertexBuffers(0, 1, &vbv);
-	commandList->IASetIndexBuffer(&ibv);
-
-	ID3D12DescriptorHeap* heaps[] = { m_pTextureManager->GetSpriteDescriptorHeap()->Heap() };
-	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-	commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_UI::eStructuredBufferPerInstance,
-		m_structuredBuffer_perInstance.GpuAddress());
-
-	commandList->SetGraphicsRootDescriptorTable((UINT)RootSig_UI::eTextures,
-		m_pTextureManager->GetSpriteDescriptorHeap()->GetFirstGpuHandle());
-
-	commandList->DrawIndexedInstanced(6, m_uiList.size(), 0,
-		0, 0);
+	Draw2DSprite();
+	DrawFont();
 }
 
 void HUIManager::Update()
@@ -127,11 +104,21 @@ void HUIManager::Update()
 	}
 }
 
-void HUIManager::CreateDeviceDependentResource()
+void HUIManager::CreateDeviceDependentResource(ResourceUploadBatch& resourceBatch)
 {
-	CreateRootSignature_lightCalculation();
+	CreateRootSignature_UI();
 	CreatePSO();
 	CreateVertexIndexBuffer();
+
+	CreateSpriteBatchForFont(resourceBatch);
+	auto device = m_pDeviceResources->GetD3DDevice();
+	m_FontDescriptorHeap = std::make_unique<DescriptorHeap>(device, 1);
+}
+
+void HUIManager::CreateWindowSizeDependentResources()
+{
+	auto viewport = m_pDeviceResources->GetScreenViewport();
+	m_sprites->SetViewport(viewport);
 }
 
 HUIData* HUIManager::CreateUI()
@@ -146,7 +133,12 @@ HUIData* HUIManager::CreateUI()
 	return returnPtr;
 }
 
-void HUIManager::CreateRootSignature_lightCalculation()
+void HUIManager::AddDebugString(DebugString debugString)
+{
+	m_debugStrings.push_back(debugString);
+}
+
+void HUIManager::CreateRootSignature_UI()
 {
 	CD3DX12_DESCRIPTOR_RANGE texTable;
 	texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_SPRITE_DESCRIPTORHEAP_SIZE, 0, 1);
@@ -157,7 +149,6 @@ void HUIManager::CreateRootSignature_lightCalculation()
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[(UINT)RootSig_UI::eStructuredBufferPerInstance].InitAsShaderResourceView(0, 0);
 	slotRootParameter[(UINT)RootSig_UI::eTextures].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_ALL);
-
 
 	auto staticSamplers = d3dUtil::GetStaticSamplers();
 
@@ -251,7 +242,6 @@ void HUIManager::CreateVertexIndexBuffer()
 	indexList.push_back(1);
 	indexList.push_back(3);
 
-
 	ResourceUploadBatch batch(device);
 	batch.Begin();
 
@@ -267,6 +257,28 @@ void HUIManager::CreateVertexIndexBuffer()
 
 	auto uploadResourcesFinished = batch.End(m_pDeviceResources->GetCommandQueue());
 	uploadResourcesFinished.wait();
+}
+
+void HUIManager::CreateSpriteBatchForFont(ResourceUploadBatch& resourceBatch)
+{
+	auto device = m_pDeviceResources->GetD3DDevice();
+
+	RenderTargetState rtState(m_pDeviceResources->GetBackBufferFormat(), m_pDeviceResources->GetDepthBufferFormat());
+
+	SpriteBatchPipelineStateDescription pd(rtState);
+
+	m_sprites = std::make_unique<SpriteBatch>(device, resourceBatch, pd);
+
+
+}
+
+void HUIManager::LoadFont(const WCHAR* spriteFontFile, ResourceUploadBatch& resourceBatch)
+{
+	m_font = std::make_unique<SpriteFont>(m_pDeviceResources->GetD3DDevice(),
+		resourceBatch,
+		spriteFontFile,
+		m_FontDescriptorHeap->GetFirstCpuHandle(),
+		m_FontDescriptorHeap->GetFirstGpuHandle());
 }
 
 D3D12_VERTEX_BUFFER_VIEW HUIManager::GetVertexBufferView()
@@ -286,4 +298,85 @@ D3D12_INDEX_BUFFER_VIEW HUIManager::GetIndexBufferView()
 	ibv.Format = DXGI_FORMAT_R32_UINT;
 	ibv.SizeInBytes = sizeof(std::uint32_t) * 6;
 	return ibv;
+}
+
+void HUIManager::Draw2DSprite()
+{
+	if (m_uiList.size() == 0)
+		return;
+
+	m_pDeviceResources->SetUiViewPort();
+
+	auto commandList = m_pDeviceResources->GetCommandList();
+	auto rtv = m_pDeviceResources->GetRenderTargetView();
+	auto dsv = m_pDeviceResources->GetDepthStencilView();
+	commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+
+	commandList->SetPipelineState(m_PSO.Get());
+	commandList->SetGraphicsRootSignature(m_pRootSignature.Get());
+	commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	D3D12_VERTEX_BUFFER_VIEW vbv = GetVertexBufferView();
+	D3D12_INDEX_BUFFER_VIEW ibv = GetIndexBufferView();
+	commandList->IASetVertexBuffers(0, 1, &vbv);
+	commandList->IASetIndexBuffer(&ibv);
+
+	ID3D12DescriptorHeap* heaps[] = { m_pTextureManager->GetSpriteDescriptorHeap()->Heap() };
+	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_UI::eStructuredBufferPerInstance,
+		m_structuredBuffer_perInstance.GpuAddress());
+
+	commandList->SetGraphicsRootDescriptorTable((UINT)RootSig_UI::eTextures,
+		m_pTextureManager->GetSpriteDescriptorHeap()->GetFirstGpuHandle());
+
+	commandList->DrawIndexedInstanced(6, m_uiList.size(), 0,
+		0, 0);
+}
+
+void HUIManager::DrawFont()
+{
+	auto commandList = m_pDeviceResources->GetCommandList();
+
+	auto rtvDescriptor = m_pDeviceResources->GetRenderTargetView();
+
+	commandList->OMSetRenderTargets(1, &rtvDescriptor, FALSE, nullptr);
+
+	ID3D12DescriptorHeap* heaps1[] = { m_FontDescriptorHeap->Heap() };
+	commandList->SetDescriptorHeaps(_countof(heaps1), heaps1);
+
+	m_sprites->Begin(commandList);
+
+	DXGI_QUERY_VIDEO_MEMORY_INFO result;
+	m_pDeviceResources->GerAdapter3()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &result);
+	std::string gpuMemory = "GraphicMemory\nbudget: " + std::to_string(result.Budget) +
+		"\ncurrentUsage: " + std::to_string(result.CurrentUsage) +
+		"\navailableReservation: " + std::to_string(result.AvailableForReservation) +
+		"\ncurrentReservation: " + std::to_string(result.CurrentReservation);
+
+	UINT fps = m_pStepTimer->GetFramesPerSecond();
+
+	std::string strFPS = "FPS : " + std::to_string(fps);
+
+	int startPosY = 500;
+	std::string totalObject = "Total Object : " + std::to_string(m_pModelManager->GetTotalInstanceCnt());
+	std::string visibleObject = "Visible Object : " + std::to_string(m_pModelManager->GetVisibleInstanceCnt());
+
+	if (m_font)
+	{
+		m_font->DrawString(m_sprites.get(), strFPS.c_str(), XMFLOAT2(100, startPosY), Colors::Black);
+		m_font->DrawString(m_sprites.get(), totalObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
+		m_font->DrawString(m_sprites.get(), visibleObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
+		m_font->DrawString(m_sprites.get(), gpuMemory.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
+
+		while (!m_debugStrings.empty())
+		{
+			DebugString& debugString = m_debugStrings.front();
+			m_font->DrawString(m_sprites.get(), debugString.message.c_str(), XMFLOAT2(debugString.posX, debugString.posY),
+				debugString.color);
+			m_debugStrings.pop_front();
+		}
+	}
+
+	m_sprites->End();
 }

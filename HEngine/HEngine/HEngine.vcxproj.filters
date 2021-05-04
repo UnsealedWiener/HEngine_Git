@@ -31,20 +31,29 @@
     <Filter Include="Source\Other\HFBXImporter">
       <UniqueIdentifier>{05bd5016-babe-4998-92b9-5b696fd72539}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\MainEngine\HSimplePrimitive">
-      <UniqueIdentifier>{ea9707c4-5763-4db0-b3de-e1c7715d7134}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Other\StructureHelper">
       <UniqueIdentifier>{dba7ee43-553c-4b2c-b856-409cef90b785}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Other\BufferHelper">
       <UniqueIdentifier>{628a96bf-9f96-4ed4-bfae-bd0cc3042881}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\MainEngine\HGraphicPipeline\UIManager">
-      <UniqueIdentifier>{906926b2-c33b-482a-b70b-44845f68598a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Other\SelfFormatReader">
       <UniqueIdentifier>{84f43da8-085a-4ff8-8505-3736750e7486}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HSimplePrimitive">
+      <UniqueIdentifier>{ea9707c4-5763-4db0-b3de-e1c7715d7134}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HComputeLighting">
+      <UniqueIdentifier>{59fdf36d-3202-4e44-8d60-744b34b972e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HUIManager">
+      <UniqueIdentifier>{906926b2-c33b-482a-b70b-44845f68598a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HRasterize">
+      <UniqueIdentifier>{7257c805-65a9-480d-9d7d-367f0cca7ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HRaytracing">
+      <UniqueIdentifier>{65d80d25-f2e1-4b49-b2af-0f675f542cbd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -62,12 +71,6 @@
     </ClCompile>
     <ClCompile Include="EngineInterface.cpp">
       <Filter>Source\EngineInterface</Filter>
-    </ClCompile>
-    <ClCompile Include="HRasterize.cpp">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClCompile>
-    <ClCompile Include="HRaytracing.cpp">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
     </ClCompile>
     <ClCompile Include="HModelManager.cpp">
       <Filter>Source\MainEngine\HModelManager</Filter>
@@ -88,10 +91,10 @@
       <Filter>Source\Other</Filter>
     </ClCompile>
     <ClCompile Include="HSimplePrimitiveManager.cpp">
-      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HSimplePrimitive</Filter>
     </ClCompile>
     <ClCompile Include="HSimplePrimitiveStructs.cpp">
-      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HSimplePrimitive</Filter>
     </ClCompile>
     <ClCompile Include="HManagerController.cpp">
       <Filter>Source\Other\StructureHelper</Filter>
@@ -105,17 +108,23 @@
     <ClCompile Include="d3dUtil.cpp">
       <Filter>Source\Other</Filter>
     </ClCompile>
-    <ClCompile Include="HComputeLighting.cpp">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClCompile>
     <ClCompile Include="HUIManager.cpp">
-      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HUIManager</Filter>
     </ClCompile>
     <ClCompile Include="HUIManagerDefines.cpp">
-      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HUIManager</Filter>
     </ClCompile>
     <ClCompile Include="HSelfFormatReader.cpp">
       <Filter>Source\Other\SelfFormatReader</Filter>
+    </ClCompile>
+    <ClCompile Include="HComputeLighting.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\HComputeLighting</Filter>
+    </ClCompile>
+    <ClCompile Include="HRasterize.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRasterize</Filter>
+    </ClCompile>
+    <ClCompile Include="HRaytracing.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRaytracing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,15 +146,6 @@
     <ClInclude Include="EngineInterface.h">
       <Filter>Source\EngineInterface</Filter>
     </ClInclude>
-    <ClInclude Include="HRasterize.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
-    <ClInclude Include="HRaytracing.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
-    <ClInclude Include="HRasterizeDefines.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
     <ClInclude Include="HModelManager.h">
       <Filter>Source\MainEngine\HModelManager</Filter>
     </ClInclude>
@@ -156,9 +156,6 @@
       <Filter>Source\MainEngine\HPassConstant</Filter>
     </ClInclude>
     <ClInclude Include="HGraphicPipeline.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
-    <ClInclude Include="HRaytracingDefines.h">
       <Filter>Source\MainEngine\HGraphicPipeline</Filter>
     </ClInclude>
     <ClInclude Include="HTextureManager.h">
@@ -177,10 +174,10 @@
       <Filter>Source\MainEngine\HModelManager</Filter>
     </ClInclude>
     <ClInclude Include="HSimplePrimitiveManager.h">
-      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HSimplePrimitive</Filter>
     </ClInclude>
     <ClInclude Include="HSimplePrimitiveStructs.h">
-      <Filter>Source\MainEngine\HSimplePrimitive</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HSimplePrimitive</Filter>
     </ClInclude>
     <ClInclude Include="HManagerController.h">
       <Filter>Source\Other\StructureHelper</Filter>
@@ -194,23 +191,35 @@
     <ClInclude Include="d3dUtil.h">
       <Filter>Source\Other</Filter>
     </ClInclude>
-    <ClInclude Include="HComputeLighting.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
-    <ClInclude Include="HComputeLightingDefines.h">
-      <Filter>Source\MainEngine\HGraphicPipeline</Filter>
-    </ClInclude>
     <ClInclude Include="HUIManager.h">
-      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HUIManager</Filter>
     </ClInclude>
     <ClInclude Include="HUIManagerDefines.h">
-      <Filter>Source\MainEngine\HGraphicPipeline\UIManager</Filter>
+      <Filter>Source\MainEngine\HGraphicPipeline\HUIManager</Filter>
     </ClInclude>
     <ClInclude Include="HSelfFormatDefines.h">
       <Filter>Source\Other\SelfFormatReader</Filter>
     </ClInclude>
     <ClInclude Include="HSelfFormatReader.h">
       <Filter>Source\Other\SelfFormatReader</Filter>
+    </ClInclude>
+    <ClInclude Include="HComputeLighting.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HComputeLighting</Filter>
+    </ClInclude>
+    <ClInclude Include="HComputeLightingDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HComputeLighting</Filter>
+    </ClInclude>
+    <ClInclude Include="HRasterize.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRasterize</Filter>
+    </ClInclude>
+    <ClInclude Include="HRasterizeDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRasterize</Filter>
+    </ClInclude>
+    <ClInclude Include="HRaytracingDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRaytracing</Filter>
+    </ClInclude>
+    <ClInclude Include="HRaytracing.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRaytracing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -102,8 +102,6 @@ void HRaytracing::CreateDescriptors(ID3D12Resource* pReflection, ID3D12Resource*
 		pDepth, &srvDesc,
 		m_pDescriptorHeap_SRVUAV->GetCpuHandle((UINT)SRVUAVDescriptorHeapOffset_Raytracing::DepthMap));
 
-	
-
 }
 
 void HRaytracing::Update()

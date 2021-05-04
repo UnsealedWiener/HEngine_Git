@@ -50,38 +50,25 @@ public:
 	void GetDefaultSize(int& width, int& height) const;
 
 private:
+	const DXGI_FORMAT c_backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+	const DXGI_FORMAT c_depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
+	const unsigned int c_backBufferCount = 2;
+	D3D_FEATURE_LEVEL c_minFeatureLevel = D3D_FEATURE_LEVEL_11_0;
 
-	HPassConstant m_passConstant;
-	HModelManager* m_pModelManager;
-	HGraphicPipeline m_graphicPipeline;
-	HPicking m_picking;
-	HBufferManager* m_pHBufferManager;
-
-	//HWND InitWindow(HINSTANCE instance, LONG clientWidth, LONG clientHeight);
+	DeviceResources*								m_pDeviceResources;
+	HPassConstant									m_passConstant;
+	HModelManager*									m_pModelManager;
+	HGraphicPipeline								m_graphicPipeline;
+	Camera											m_camera;
+	HPicking										m_picking;
+	HBufferManager*									m_pHBufferManager;
+	DX::StepTimer									m_timer;
 
 	void Update(DX::StepTimer const& timer);
 	void Render();
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
 	
-	const DXGI_FORMAT c_backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-	const DXGI_FORMAT c_depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
-	const unsigned int c_backBufferCount = 2;
-	D3D_FEATURE_LEVEL c_minFeatureLevel = D3D_FEATURE_LEVEL_11_0;
-
-
-	// Device resources.
-	//std::unique_ptr<DX::DeviceResources>			m_pDeviceResources;
-	DeviceResources*			m_pDeviceResources;
-
-	
-	bool											m_bBGMOn = false;
-	bool											m_bFreeCameraOn = true;
-
-
-	// Rendering loop timer.
-	DX::StepTimer									m_timer;
-
 	// Input devices.
 	std::unique_ptr<DirectX::GamePad>				m_gamePad;
 	std::unique_ptr<DirectX::Keyboard>				m_keyboard;
@@ -94,19 +81,6 @@ private:
 	//그래픽메모리의 전반을 관리하는 객체(싱글턴)
 	std::unique_ptr<DirectX::GraphicsMemory>        m_graphicsMemory;
 	std::unique_ptr<DirectX::ResourceUploadBatch>	m_resourceUploadBatch;
-	//서술자 힙
-	std::unique_ptr<DirectX::DescriptorHeap>        m_FontDescriptorHeap;
-	//위 서술자 힙의 자원 인덱싱
-	enum Descriptors_Font
-	{
-		SegoeFont,
-		Count
-	};
-
-	//스프라이트(문자, UI 등) 
-	std::unique_ptr<DirectX::SpriteBatch>           m_sprites;
-	std::unique_ptr<DirectX::SpriteFont>            m_font;
-
 	//오디오 엔진
 	std::unique_ptr<DirectX::AudioEngine>           m_audEngine;
 	std::unique_ptr<DirectX::WaveBank>              m_waveBank;
@@ -116,29 +90,19 @@ private:
 	
 	uint32_t                                        m_audioEvent;
 	float                                           m_audioTimerAcc;
-
 	bool                                            m_retryDefault;
 
-	Camera											m_camera;
-
-	DirectX::BoundingFrustum						m_camFrustum;
-	
 
 	HTextureManager* m_textureManager;
-	const unsigned int c_maxMaterial = 50;
 	
 	//디버그용 문자열
 	std::deque<DebugString> m_debugStrings;
-
 
 	//엔진인터페이스용
 	//함수들
 	public:
 		void StartSetting();
 		void FinishSetting();
-
-
-
 		float GetElapsedTime();
 		void SetCamera(Camera camera);
 		Camera* GetCamera();
@@ -146,43 +110,26 @@ private:
 		DirectX::GamePad* GetGamePad();
 		DirectX::Mouse* GetMouse();
 		void AddDebugString(DebugString debugString);
-		
-
-
-
 		HInstanceData* Picking(unsigned int pickX, unsigned int pickY);
-
-		//working
 		void ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-		
-		//HModelRawData* GetModelRawData(MODELHANDLE hModel) {return m_modelManager.GetModelRawData(hModel);}
-
-
-		///
-		/// 
 		HProceduralGeometry_line* CreateLine(unsigned char flag);
 		HProceduralGeometry_rect* CreateRect(unsigned char flag);
 		HSimplePrimitive* CreateBox(Vector3 Size, unsigned char flag);
 		HMaterialData* CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic,
 			const WCHAR* ao, const WCHAR* normal, const WCHAR* height);
-
 		HSpriteData* CreateSprite(const WCHAR* spriteFile);
-
 		HModelData* CreateModelFromFbxFile(std::string fbxfile);
 		HAnimData* CreateAnimationFromFbxFiles(std::vector<std::string> fbxNames);
 		HModelData* CreateModelFromHModelFile(std::string fbxfile);
 		HAnimData* CreateAnimationFromHAnimFiles(std::vector<std::string> fbxNames);
 		HLightData* CreateLight(LightType lightType);
-
-
 		HUIData* CreateUI();
-
+		void LoadSkyBox(const WCHAR* skyboxDDSFile);
+		void LoadFont(const WCHAR* spriteFontFile);
 		void SetReflectionEffect(bool bOnOff);
 		void SetShadowEffect(bool bOnOff);
 		void SetSSAO(bool bOnOff);
 		void SetWireFrame(bool bOnOff);
-
 		RECT GetClientRectFromEngine();
-	
 };
 

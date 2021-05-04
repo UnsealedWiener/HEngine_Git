@@ -3,9 +3,6 @@
 #include <Dbt.h>
 #include"FindMedia.h"
 #include"d3dUtil.h"
-#include"Shaders\CompiledShaders\Raytracing.hlsl.h"
-
-
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -472,8 +469,8 @@ void HEngine::Update(DX::StepTimer const& timer)
 			if (m_audEngine->Reset())
 			{
 				// Restart looping audio
-				if(m_effect1.get()!=nullptr)
-				m_effect1->Play(true);
+				if (m_effect1.get() != nullptr)
+					m_effect1->Play(true);
 			}
 		}
 		else
@@ -481,7 +478,7 @@ void HEngine::Update(DX::StepTimer const& timer)
 			m_audioTimerAcc = 4.f;
 
 			if (m_waveBank.get() != nullptr)
-			m_waveBank->Play(m_audioEvent++);
+				m_waveBank->Play(m_audioEvent++);
 
 			if (m_audioEvent >= 11)
 				m_audioEvent = 0;
@@ -507,7 +504,7 @@ void HEngine::Update(DX::StepTimer const& timer)
 	//키보드 업데이트
 	auto kb = m_keyboard->GetState();
 	m_keyboardButtons.Update(kb);
- 
+
 	if (kb.Escape)
 	{
 		PostQuitMessage(0);
@@ -544,48 +541,6 @@ void HEngine::Render()
 	//render
 	m_graphicPipeline.Draw();
 
-	// Unbind depth/stencil for UI.
-	auto rtvDescriptor = m_pDeviceResources->GetRenderTargetView();
-
-	commandList->OMSetRenderTargets(1, &rtvDescriptor, FALSE, nullptr);
-
-	ID3D12DescriptorHeap* heaps1[] = { m_FontDescriptorHeap->Heap() };
-	commandList->SetDescriptorHeaps(_countof(heaps1), heaps1);
-
-	m_sprites->Begin(commandList);
-
-	DXGI_QUERY_VIDEO_MEMORY_INFO result;
-	m_pDeviceResources->GerAdapter3()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &result);
-	std::string gpuMemory = "GraphicMemory\nbudget: " + std::to_string(result.Budget) +
-		"\ncurrentUsage: " + std::to_string(result.CurrentUsage) +
-		"\navailableReservation: " + std::to_string(result.AvailableForReservation) +
-		"\ncurrentReservation: " + std::to_string(result.CurrentReservation);
-
-	UINT fps = m_timer.GetFramesPerSecond();
-
-	std::string strFPS = "FPS : " + std::to_string(fps);
-
-	int startPosY = 500;
-	std::string totalObject = "Total Object : " + std::to_string(m_pModelManager->GetTotalInstanceCnt());
-	std::string visibleObject = "Visible Object : " + std::to_string(m_pModelManager->GetVisibleInstanceCnt());
-
-	m_font->DrawString(m_sprites.get(), strFPS.c_str(), XMFLOAT2(100, startPosY), Colors::Black);
-	m_font->DrawString(m_sprites.get(), totalObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
-	m_font->DrawString(m_sprites.get(), visibleObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
-	m_font->DrawString(m_sprites.get(), gpuMemory.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
-
-	while (!m_debugStrings.empty())
-	{
-		DebugString& debugString = m_debugStrings.front();
-		m_font->DrawString(m_sprites.get(), debugString.message.c_str(), XMFLOAT2(debugString.posX, debugString.posY),
-			debugString.color);
-		m_debugStrings.pop_front();
-	}
-
-	m_sprites->End();
-
-	PIXEndEvent(commandList);
-
 	// Show the new frame.
 	PIXBeginEvent(m_pDeviceResources->GetCommandQueue(), PIX_COLOR_DEFAULT, L"Present");
 	m_pDeviceResources->Present();
@@ -599,8 +554,6 @@ void HEngine::Render()
 
 void HEngine::CreateDeviceDependentResources()
 {
-	
-
 	auto device = m_pDeviceResources->GetD3DDevice();
 
 	m_graphicsMemory = std::make_unique<GraphicsMemory>(device);
@@ -608,51 +561,23 @@ void HEngine::CreateDeviceDependentResources()
 	m_textureManager = HTextureManager::GetInstance();
 	m_textureManager->Initialize(device);
 
-	m_FontDescriptorHeap = std::make_unique<DescriptorHeap>(device, Descriptors_Font::Count);
-
 	m_pModelManager = HModelManager::GetInstance();
 	m_pModelManager->Initialize(m_pDeviceResources, m_graphicsMemory.get(), &m_camera);
 	m_passConstant.Initialize(m_pDeviceResources, m_graphicsMemory.get());
-	m_graphicPipeline.Initialize(m_graphicsMemory.get(), m_pDeviceResources, m_pModelManager, &m_passConstant, m_textureManager, &m_camera);
+	m_graphicPipeline.Initialize(m_graphicsMemory.get(), m_pDeviceResources, m_pModelManager, &m_passConstant, m_textureManager, &m_camera, &m_timer);
 	m_picking.Initialize(m_pDeviceResources, m_pModelManager, &m_camera);
 	m_pHBufferManager = HBufferManager::GetInstance();
 
-	{
-		//GPU를 통한 리소스 생성에 필요한 객체(commandList, commandAlloc 등이 내재되어있다.)
-		ResourceUploadBatch resourceUpload(device);
 
-		//Command list 작성 시작
-		resourceUpload.Begin();
-
-		m_graphicPipeline.CreateDeviceDependentResources(resourceUpload);
-
-		//스프라이트(UI, 텍스트 등을 출력하기 위한 Pipe라인 생성)
-		{
-			RenderTargetState rtState(m_pDeviceResources->GetBackBufferFormat(), m_pDeviceResources->GetDepthBufferFormat());
-
-			SpriteBatchPipelineStateDescription pd(rtState);
-
-			m_sprites = std::make_unique<SpriteBatch>(device, resourceUpload, pd);
-
-			//폰트를 찾아서 로드하고 서술자 힙에 저장해둔다.
-			wchar_t strFilePath[MAX_PATH] = {};
-			DX::FindMediaFile(strFilePath, MAX_PATH, L"SegoeUI_18.spritefont");
-			m_font = std::make_unique<SpriteFont>(device, resourceUpload,
-				strFilePath,
-				m_FontDescriptorHeap->GetCpuHandle(Descriptors_Font::SegoeFont),
-				m_FontDescriptorHeap->GetGpuHandle(Descriptors_Font::SegoeFont));
-		}
-
-		{
-			m_textureManager->LoadSkybox(device, resourceUpload, L"Media/Skybox/Skybox.dds");
-		}
-
-		//Command list 작성 완료
-		auto uploadResourcesFinished = resourceUpload.End(m_pDeviceResources->GetCommandQueue());
-
-		//GPU가 모든 명령어를 실행하기를 기다린다.
-		uploadResourcesFinished.wait();
-	}
+	//GPU를 통한 리소스 생성에 필요한 객체(commandList, commandAlloc 등이 내재되어있다.)
+	ResourceUploadBatch resourceUpload(device);
+	//Command list 작성 시작
+	resourceUpload.Begin();
+	m_graphicPipeline.CreateDeviceDependentResources(resourceUpload);
+	//Command list 작성 완료
+	auto uploadResourcesFinished = resourceUpload.End(m_pDeviceResources->GetCommandQueue());
+	//GPU가 모든 명령어를 실행하기를 기다린다.
+	uploadResourcesFinished.wait();
 }
 
 void HEngine::CreateWindowSizeDependentResources()
@@ -670,20 +595,14 @@ void HEngine::CreateWindowSizeDependentResources()
 	}
 
 	m_camera.SetLens(fovAngleY, size.right, size.bottom, 1.0f, 1200.f);
-	BoundingFrustum::CreateFromMatrix(m_camFrustum, m_camera.GetProj());
+
 
 	m_graphicPipeline.CreateWindowSizeDependetResources();
 
-	//원하는 뷰포트를 설정할 
-	auto viewport = m_pDeviceResources->GetScreenViewport();
-	m_sprites->SetViewport(viewport);
 }
 
 void HEngine::OnDeviceLost()
 {
-	m_font.reset();
-	m_sprites.reset();
-	m_FontDescriptorHeap.reset();
 	m_graphicsMemory.reset();
 }
 
@@ -967,10 +886,10 @@ void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 
-	//case WM_MENUCHAR:
-	//	// A menu is active and the user presses a key that does not correspond
-	//	// to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
-	//	return MAKELRESULT(0, MNC_CLOSE);
+		//case WM_MENUCHAR:
+		//	// A menu is active and the user presses a key that does not correspond
+		//	// to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
+		//	return MAKELRESULT(0, MNC_CLOSE);
 	}
 
 	//return DefWindowProc(hWnd, message, wParam, lParam);
@@ -993,9 +912,8 @@ DirectX::Mouse* HEngine::GetMouse()
 
 void HEngine::AddDebugString(DebugString debugString)
 {
-	m_debugStrings.push_back(debugString);
+	HUIManager::GetInstance()->AddDebugString(debugString);
 }
-
 
 HProceduralGeometry_line* HEngine::CreateLine(unsigned char flag)
 {
@@ -1009,7 +927,7 @@ HProceduralGeometry_rect* HEngine::CreateRect(unsigned char flag)
 
 HSimplePrimitive* HEngine::CreateBox(Vector3 Size, unsigned char flag)
 {
-	return HSimplePrimitiveManager::GetInstance()->CreateBox(Size,flag);
+	return HSimplePrimitiveManager::GetInstance()->CreateBox(Size, flag);
 }
 
 HMaterialData* HEngine::CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height)
@@ -1054,6 +972,16 @@ HUIData* HEngine::CreateUI()
 	return HUIManager::GetInstance()->CreateUI();
 }
 
+void HEngine::LoadSkyBox(const WCHAR* skyboxDDSFile)
+{
+	m_textureManager->LoadSkybox(*m_resourceUploadBatch, skyboxDDSFile);
+}
+
+void HEngine::LoadFont(const WCHAR* spriteFontFile)
+{
+	HUIManager::GetInstance()->LoadFont(spriteFontFile, *m_resourceUploadBatch);
+}
+
 void HEngine::SetReflectionEffect(bool bOnOff)
 {
 	m_graphicPipeline.SetReflection(bOnOff);
@@ -1078,10 +1006,6 @@ RECT HEngine::GetClientRectFromEngine()
 {
 	return m_pDeviceResources->GetOutputSize();
 }
-
-
-
-
 #pragma endregion
 
 

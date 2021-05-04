@@ -4,9 +4,10 @@
 #include"HTextureManager.h"
 #include"HPassConstant.h"
 #include"HModelManager.h"
+#include"StepTimer.h"
 
 void HGraphicPipeline::Initialize(GraphicsMemory* pGraphicsMemory, DeviceResources* pDeviceResources, HModelManager* pModelManager,
-	HPassConstant* pPassConstant, HTextureManager* pTextureManager, Camera* pCamera)
+	HPassConstant* pPassConstant, HTextureManager* pTextureManager, Camera* pCamera, StepTimer* pStepTimer)
 {
 	m_pDeviceResources = pDeviceResources;
 
@@ -27,7 +28,7 @@ void HGraphicPipeline::Initialize(GraphicsMemory* pGraphicsMemory, DeviceResourc
 
 	m_pHUIManager = HUIManager::GetInstance();
 
-	m_pHUIManager->Initialize(pGraphicsMemory, m_pDeviceResources, pTextureManager);
+	m_pHUIManager->Initialize(pGraphicsMemory, m_pDeviceResources, pTextureManager, pModelManager, pStepTimer);
 
 }
 
@@ -138,9 +139,6 @@ void HGraphicPipeline::Draw()
 
 	m_pSimplePrimitiveManager->Draw(commandList);
 	m_pHUIManager->Draw();
-
-	//debugDrawing
-
 }
 
 void HGraphicPipeline::CreateWindowSizeDependetResources()
@@ -153,7 +151,7 @@ void HGraphicPipeline::CreateWindowSizeDependetResources()
 	m_computeLighting.CreateDescriptors(m_albedoBuffer.Get(), m_metallicRoughnessAoBuffer.Get(), m_normalBuffer.Get(),
 		m_pDeviceResources->GetDepthStencil(), m_reflectionBuffer.Get(), m_shadowBuffer.Get(),m_randomVectorBuffer.Get(),m_ssaoBuffer.Get(), m_resultBuffer.Get());
 	m_pSimplePrimitiveManager->CreateWindowSizeDependentResources();
-	m_pHUIManager->CreateDeviceDependentResource();
+	m_pHUIManager->CreateWindowSizeDependentResources();
 
 	if (m_bRayracingSupported)
 		m_raytracing.CreateDescriptors(m_reflectionBuffer.Get(), m_normalBuffer.Get(), m_pDeviceResources->GetDepthStencil());
@@ -167,6 +165,8 @@ void HGraphicPipeline::CreateDeviceDependentResources(ResourceUploadBatch& resou
 	m_pSimplePrimitiveManager->CreateDeviceDependentResources();
 	m_rasterize.CreateDeviceDependentResources();
 	m_computeLighting.CreateDeviceDependentResources();
+	m_pHUIManager->CreateDeviceDependentResource(resourceBatch);
+
 	if (m_bRayracingSupported)
 		m_raytracing.CreateDeviceDependentResources(resourceBatch);
 }

@@ -61,7 +61,6 @@ private:
 	//raytracing
 	SharedGraphicsResource												  m_raytracingStructuredBuffer_perInstance;
 	SharedGraphicsResource												  m_raytracingStructuredBuffer_perModel;
-	//SharedGraphicsResource											m_raytracingStructuredBuffer_perNode;
 
 	std::vector<ComPtr<ID3D12Resource>>									  m_pTopLevelAccelerationStructures;
 	std::vector<ComPtr<ID3D12Resource>>									  m_pTopLevelAccelerationStructureScratches;
@@ -97,8 +96,8 @@ public:
 	void SetInstanceAnimTimeByRatio(INSTANCEHANDLE hInstance, float ratio);
 	void SetInstanceMatLerpValue_twoMat(INSTANCEHANDLE hInstance, float materialLerpValue);*/
 
-	unsigned int GetTotalInstanceCnt() { return m_instances.size(); }
-	unsigned int GetVisibleInstanceCnt() { return m_visibleInstance; }
+	unsigned int GetTotalInstanceCnt() const{ return m_instances.size(); }
+	unsigned int GetVisibleInstanceCnt() const{ return m_visibleInstance; }
 
 	void Update();
 	void UpdateResource_raterize();
@@ -160,47 +159,30 @@ private:
 	//void UpdateBoneAnim_global(std::vector<Matrix>& boneData, float animTime, HBone* pBone, HBoneAnims* pAnim);
 
 	//raytracing resource update
-
-	
-
 	void UpdatePerModelResource_raytracing();
 	void UpdatePerInstanceResource_raytracing();
 	void UpdatePerNodeResource_raytracing();
 	void UpdatePerNodeResourceRecusively_raytracing(HMesh* pNode,Matrix AxisChange, std::vector<HSturecturedBuffer_Raytracing_PerNode>& perNode);
 	
-	
 	void UpdateRaytracingBottomLevelAccelerationStructure_raytracing(ID3D12GraphicsCommandList4* cmdList);
 	void CreateBLAS(ID3D12GraphicsCommandList4* cmdList, HInstance* pHInstance, D3D12_RAYTRACING_GEOMETRY_DESC& geometryDesc);
 	void UpdateBLAS(ID3D12GraphicsCommandList4* cmdList, HInstance* pHInstance, D3D12_RAYTRACING_GEOMETRY_DESC& geometryDesc);
 
-
 	void UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3D12GraphicsCommandList4* cmdList);
-
 
 	//working
 	void CreateComputePSO_lightCalculation();
 	void CreateComputeRootSignature();
-
 
 	void UpdateAllInstancedVertices_raytracing();
 	unsigned int GetTotalDynamicVertexCount();
 	void CreateVertexBuffer_raytracing(unsigned int vertexCount);
 	void CreatePerDynamicModelDataForComputeShader();
 
-
 	void UpdateVertexBuffer_raytracing(ID3D12GraphicsCommandList* cmdList);
-
-
-
-
-
-	
 
 	friend class HRasterize;
 	friend class HRaytracing;
 	friend class HPicking;
 	friend struct HModel;
-	//working
-
-
 };

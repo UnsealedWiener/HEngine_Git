@@ -164,6 +164,20 @@ RECT HEngine_DX12_3D::GetClientRectFromEngine()
 	return m_pHEngine->GetClientRectFromEngine();
 }
 
+void HEngine_DX12_3D::LoadSkyBox(const WCHAR* skyBoxDDSFile)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->LoadSkyBox(skyBoxDDSFile);
+}
+
+void HEngine_DX12_3D::LoadFont(const WCHAR* spriteFontFile)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->LoadFont(spriteFontFile);
+}
+
 void HEngine_DX12_3D::SetReflectionEffect(bool bOnOff)
 {
 	if (m_pHEngine == nullptr)

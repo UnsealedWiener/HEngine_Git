@@ -323,6 +323,9 @@ public:
 
 	RECT GetClientRectFromEngine();
 
+	void LoadSkyBox(const WCHAR* skyBoxDDSFile);
+	void LoadFont(const WCHAR* spriteFontFile);
+
 	void SetReflectionEffect(bool bOnOff);
 	void SetShadowEffect(bool bOnOff);
 	void SetSSAO(bool bOnOff);

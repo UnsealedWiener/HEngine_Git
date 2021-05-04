@@ -19,6 +19,11 @@ enum class DescriptorList_NonShaderVisible_GraphicPipiline
 	TotalCount
 };
 
+namespace DX
+{
+	class StepTimer;
+}
+
 class HGraphicPipeline
 {
 private:
@@ -31,9 +36,6 @@ private:
 	HUIManager* m_pHUIManager;
 	HSimplePrimitiveManager* m_pSimplePrimitiveManager;
 
-
-	
-
 	//rasterize produced buffers(g-buffers, rendertarget, shaderResource)
 	ComPtr<ID3D12Resource>			m_albedoBuffer;
 	ComPtr<ID3D12Resource>			m_metallicRoughnessAoBuffer;
@@ -41,18 +43,15 @@ private:
 	ComPtr<ID3D12Resource>			m_shadowBuffer;
 	ComPtr<ID3D12Resource>			m_ssaoBuffer;
 
-
 	//raytracing produced buffers(unordered access, shaderResource)
 	ComPtr<ID3D12Resource>			m_reflectionBuffer;
 
 	//compute shader produced buffers(unordered access, copy source)
 	ComPtr<ID3D12Resource>			m_resultBuffer;
-
 	//else Buffer
 	ComPtr<ID3D12Resource>			m_randomVectorBuffer; //used for ssao
 
 	//CurrentPipeline m_currentPipeline = eRasterize;
-	bool			m_bMsaaOn = true;
 	bool			m_bWireFrameOn = false;
 	bool			m_bReflection = true;
 	bool			m_bShadowOn = true;
@@ -67,7 +66,8 @@ private:
 
 public:
 	
-	void Initialize(GraphicsMemory* pGraphicsMemory, DeviceResources* pDeviceResources, HModelManager* pModelManager, HPassConstant* pPassConstant, HTextureManager* pTextureManager, Camera* pCamera);
+	void Initialize(GraphicsMemory* pGraphicsMemory, DeviceResources* pDeviceResources, HModelManager* pModelManager,
+		HPassConstant* pPassConstant, HTextureManager* pTextureManager, Camera* pCamera, StepTimer* pStepTimer);
 	void Update();
 	void Draw();
 	void CreateWindowSizeDependetResources();

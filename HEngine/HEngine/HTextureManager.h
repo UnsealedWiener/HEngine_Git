@@ -77,7 +77,7 @@ public:
 	DirectX::DescriptorHeap* GetSkyboxDescriptorHeap() const { return m_skyboxDescriptorHeap.get(); }
 	DirectX::DescriptorHeap* GetSpriteDescriptorHeap() const { return m_spriteDescriptorHeap.get(); }
 
-	void LoadSkybox(ID3D12Device* device, ResourceUploadBatch& batch, const WCHAR* skybox);
+	void LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox);
 
 	bool GetRasterizeDirty()	const{return m_bRasterizeDirty;}
 	bool GetRaytracingDirty()	const{return m_bRaytracingDirty;}
@@ -99,7 +99,7 @@ private:
 	void CreateSRVs_material(ID3D12Device* device, HMaterial* material);
 	void CreateSRV(ID3D12Device* device, ID3D12Resource* pResouce, DirectX::DescriptorHeap* pDescriptorHeap,
 		UINT slot);
-	void CreateNullDescriptor(ID3D12Device* device, UINT slot);
+	void CreateNullDescriptor(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
 };
 
 
