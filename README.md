@@ -38,6 +38,7 @@ The HEngine is built as static library. In order to use it, you have to follow i
 HFbxImporter is built as console application. 
 
 1. Run .exe file created in Output/HFbxImporter/exe/Release/HFbxImporter.exe in cmd.
+
 2. Press enter and you will see detailed instruction.
 
 
