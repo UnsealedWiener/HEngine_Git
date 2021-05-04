@@ -158,12 +158,6 @@ float4 TraceRadianceRay(in Ray ray, in uint currentRayRecursionDepth, in float m
 	rayDesc.TMin = scene.nearZ;
 	rayDesc.TMax = scene.farZ;
 	
-	//rayDesc.TMin = 0;
-	//rayDesc.TMax = 1000000;
-
-	//rayDesc.TMin = 0;
-	//rayDesc.TMax = 100;
-
 	Payload rayPayload = { float4(0, 0, 0, 0), currentRayRecursionDepth + 1, mipmapLevel };
 
 	TraceRay(
@@ -176,7 +170,6 @@ float4 TraceRadianceRay(in Ray ray, in uint currentRayRecursionDepth, in float m
 		rayDesc,
 		rayPayload
 	);
-
 
 	return rayPayload.color;
 }
@@ -236,10 +229,6 @@ void RayGeneration()
 		rayDirection = reflect(rayDirection_fromCamera, normal);
 	}
 
-
-
-
-
 	Ray ray = { rayOrigin, rayDirection };
 	
 	uint currentRecursionDepth = 0;
@@ -248,18 +237,6 @@ void RayGeneration()
 	float4 color = TraceRadianceRay(ray, currentRecursionDepth, mipmapLevel);
 
 	gColorOutput[launchIndex] = color;
-	//gColorOutput[launchIndex] = float4(depth,0,0, 1);
-
-	//if (depth == 1.0f)
-	//{
-	//	gColorOutput[launchIndex] = float4(1, 0, 0, 1);
-	//}
-	//else
-	//{
-	//	gColorOutput[launchIndex] = float4(0, 0, 0, 1);
-
-	//}
-
 }
 
 //used when index buffer format is uint16bit
@@ -320,39 +297,7 @@ float2 HitAttribute(float2 vertexAttribute[3], BuiltInTriangleIntersectionAttrib
 		attr.barycentrics.x * (vertexAttribute[1] - vertexAttribute[0]) +
 		attr.barycentrics.y * (vertexAttribute[2] - vertexAttribute[0]);
 }
-//
-//static const float PI = 3.141592;
-//static const float Epsilon = 0.00001;
-//// Shlick's approximation of the Fresnel factor.
-//float3 FresnelSchlick(float3 F0, float cosTheta)
-//{
-//	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-//}
-//
-//// GGX/Towbridge-Reitz normal distribution function.
-//// Uses Disney's reparametrization of alpha = roughness^2.
-//float NDFGGX(float cosLh, float roughness)
-//{
-//	float alpha = roughness * roughness;
-//	float alphaSq = alpha * alpha;
-//
-//	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
-//	return alphaSq / (PI * denom * denom);
-//}
-//
-//// Single term for separable Schlick-GGX below.
-//float GASchlickG1(float cosTheta, float k)
-//{
-//	return cosTheta / (cosTheta * (1.0 - k) + k);
-//}
-//
-//// Schlick-GGX approximation of geometric attenuation function using Smith's method.
-//float GASchlickGGX(float cosLi, float cosLo, float roughness)
-//{
-//	float r = roughness + 1.0;
-//	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
-//	return GASchlickG1(cosLi, k) * GASchlickG1(cosLo, k);
-//}
+
 
 float3 SampleTextureByFloat(Texture2D inputTexture, float2 texCoord, float value)
 {
@@ -489,61 +434,16 @@ void Hit(inout Payload payload : SV_Payload, in MyAttributes attr)
 			Lo, N, cosLo, F0, albedo, metallic, roughness);
 	}
 
-
-
-	//float3 directLighting = 0.0;
-	//for (uint i = 0; i < scene.dirLightCnt; i++)
-	//{
-	//	float3 Li = -gLights[i].direction;
-	//	float3 Lradiance = gLights[i].strength;
-
-	//	//Li와 Lo사이의 하프벡터
-	//	float3 Lh = normalize(Li + Lo);
-
-	//	//Normal과 다양한 빛 벡터 사이의 각을 계산한다.
-	//	float cosLi = max(0.0, dot(N, Li));
-	//	float cosLh = max(0.0, dot(N, Lh));
-
-	//	//direct light에서의 fresnel 계산
-	//	float3 F = FresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
-	//	//Specular BRDF에서의 normal 분포도 계산
-	//	float D = NDFGGX(cosLh, roughness);
-	//	// Calculate geometric attenuation for specular BRDF.
-	//	float G = GASchlickGGX(cosLi, cosLo, roughness);
-
-	//	// Diffuse scattering happens due to light being refracted multiple times by a dielectric medium.
-	//	// Metals on the other hand either reflect or absorb energy, so diffuse contribution is always zero.
-	//	// To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness.
-	//	float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metallic);
-
-	//	// Lambert diffuse BRDF.
-	//	// We don't scale by 1/PI for lighting & material units to be more convenient.
-	//	// See: https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
-	//	float3 diffuseBRDF = kd * albedo;
-
-	//	// Cook-Torrance specular microfacet BRDF.
-	//	float3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * cosLo);
-
-	//	// Total contribution for this light.
-	//	directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
-	//}
-
 	Ray ray;
 	ray.origin = hitPosition;
 
-	//float3 eyeToRayOrigin = -(gEyePosW - hitPosition);
-	//eyeToRayOrigin = normalize(eyeToRayOrigin);
-	//ray.direction = reflect(eyeToRayOrigin, N);
-
 	ray.direction = reflect(WorldRayDirection(), N);
 
-	float4 reflectedColor = TraceRadianceRay(ray, payload.recursionDepth, roughness);
+	float3 reflectedColor = TraceRadianceRay(ray, payload.recursionDepth, roughness);
 
-	float3 ambientLighting;
-
-	float3 indirectLighting = 0;
+	float3 ambientLighting = 0;
 	{
-		float3 irradiance = float3(reflectedColor.xyz);
+		float3 irradiance = reflectedColor;
 
 		float3 F = FresnelSchlick(F0, cosLo);
 
@@ -572,36 +472,24 @@ void Hit(inout Payload payload : SV_Payload, in MyAttributes attr)
 
 	}
 
-	//float3 Ambient = float3(0.03f, 0.03f, 0.03f) * albedo * ao;
-
-
-	//float3 color = directLighting + indirectLighting+ Ambient;
 	float3 color = directLighting + pointLighting+ spotLighting+  ambientLighting* ao;
 
-
-	//float Gamma = 1.0f / 2.2f;
-	//color = color / (color + float3(1.0f, 1.0f, 1.0f));
-	//color = pow(color, float3(Gamma, Gamma, Gamma));
-
-
 	payload.color = float4(color, 1.0f);
-	//payload.recursionDepth = 0;
 }
-
-
-
 
 [shader("miss")]
 void Miss(inout Payload payload : SV_Payload)
 {
 	float mipmapLevel = payload.mipmapLevel;
 
-	
-
-
 	float3 skyboxColor = Skybox.SampleLevel(gsamLinearWrap, WorldRayDirection(), mipmapLevel);
 
-	payload.color = float4(UnGammaCorrection(skyboxColor),1);
-	//payload.recursionDepth = 0;
+	if (skyboxColor.x == 0.f && skyboxColor.x == 0.f && skyboxColor.x == 0.f)
+	{
+		payload.color = float4(0.5f, 0.5f, 0.5f,1.f);
+		return;
+	}
 
+
+	payload.color = float4(UnGammaCorrection(skyboxColor),1);
 }

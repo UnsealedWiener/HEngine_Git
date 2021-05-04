@@ -45,11 +45,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\..\Excutables\HFBXImporter\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\..\Excutables\HFBXImporter\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -66,6 +66,12 @@
       <AdditionalDependencies>libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)HSelfFormatDefines.h" "$(OutDir)..\HSelfFormatDefines.h"
+copy /Y "$(ProjectDir)HSelfFormatReader.h" "$(OutDir)..\HSelfFormatReader.h"
+copy /Y "$(ProjectDir)HSelfFormatReader.cpp" "$(OutDir)..\HSelfFormatReader.cpp"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -86,6 +92,12 @@
       <AdditionalDependencies>libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)HSelfFormatDefines.h" "$(OutDir)..\HSelfFormatDefines.h"
+copy /Y "$(ProjectDir)HSelfFormatReader.h" "$(OutDir)..\HSelfFormatReader.h"
+copy /Y "$(ProjectDir)HSelfFormatReader.cpp" "$(OutDir)..\HSelfFormatReader.cpp"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HFBXImporter.cpp" />
