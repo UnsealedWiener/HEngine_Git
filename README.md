@@ -6,7 +6,7 @@
 
 빌드 요구사항 : 
 
-Window 10 버전 : Window 10(20H1)
+Window 10 버전 : Window 10(20H1)\n
 Windows SDK 버전 : 10.0.19041.0
 
 레이트레이싱 효과 하드웨어 요구사항 : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
