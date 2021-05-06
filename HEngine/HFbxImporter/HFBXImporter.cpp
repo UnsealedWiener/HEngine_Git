@@ -63,7 +63,6 @@ bool HFbxImporter::ImportModel(const char* filename)
 
 	//fbx의 좌표계 정보를 불러오고 이를 기반으로 directX 좌표계로의 변환 matrix 생성  
 
-
 	m_axisSystem = pScene->GetGlobalSettings().GetAxisSystem();
 	CalAxisMaxToDirectX(m_axisSystem);
 

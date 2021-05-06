@@ -233,6 +233,16 @@ void ExampleGame::Loop()
 		}
 
 	}
+
+	DebugString debugString;
+	debugString.color = Color(0.5f, 0.5f, 0.5f);
+	debugString.message = "MoveCamera : W/A/S/D & Mouse Left Click";
+	debugString.posX = 100;
+	debugString.posY = 100;
+
+
+	m_p3DgraphicEngine->AddDebugString(debugString);
+
 	m_p3DgraphicEngine->Loop();
 }
 

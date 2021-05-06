@@ -1,6 +1,17 @@
 # HEngine_Git
  
 [KOR]
+
+[최소 요구 사항]
+
+빌드 요구사항 : 
+Window 10 버전 : Window 10(20H1)
+Windows SDK 버전 : 10.0.19041.0
+
+레이트레이싱 효과 하드웨어 요구사항 : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
+
+[간단한 설명]
+
 HEngine은 DirectX12에 기반한 3D 그래픽 엔진입니다.
 
 이 엔진은 DirectXTK(https://github.com/microsoft/DirectXTK)와 FBX SDK에 종속성을 가집니다.
@@ -11,11 +22,11 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 
 [HEngine과 HFbxImporter 빌드하는 법]
 
-1. 이 주소(https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1)에서 "fbx sdk 2020.1 VS2017"를 다운받습니다.
+1. 이 주소( https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1 )에서 "fbx sdk 2020.1 VS2017"를 다운받습니다.
 
 2. 설치합니다.
 
-3. 설치된 경로에서 "FBX SDK" 폴더를 찾아  HEngine\Dependency 경로로 넣어줍니다.( 기본 설치 경로는 C:\Program Files\Autodesk\FBX\FBX SDK\2020.1 입니다.)
+3. 설치된 경로에서 "2020.1" 폴더를 찾아  HEngine\Dependency 경로로 넣어줍니다.( 기본 설치 경로는 C:\Program Files\Autodesk\FBX\FBX SDK\2020.1 입니다.)
 
 4. HEngine.sln 을 열고 원하는 프로젝트를 선택해서 빌드합니다.
 
@@ -47,6 +58,17 @@ HFbxImporter는 콘솔 어플리케이션입니다.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 [ENG]
+
+[Requirements]
+
+Requirements for Build  : 
+Window 10 version : Window 10(20H1)
+Windows SDK version : 10.0.19041.0
+
+Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
+
+[Instruction]
+
  The HEngine is 3D graphic Engine based on DirectX12.
 
  It has dependency on DirectXTK(https://github.com/microsoft/DirectXTK) and FBX SDK.
@@ -62,7 +84,7 @@ HFbxImporter는 콘솔 어플리케이션입니다.
 
 2. Install fbx sdk
 
-3. Move the folder named "FBX SDK" from installed address to HEngine\Dependency
+3. Move the folder named "2020.1" from installed address to HEngine\Dependency
 (default installation address is C:\Program Files\Autodesk\FBX\FBX SDK\2020.1)
 
 4. Open HEngine.sln and select the project and build.
