@@ -16,7 +16,7 @@ Windows SDK 버전 : 10.0.19041.0
 
 HEngine은 DirectX12에 기반한 3D 그래픽 엔진입니다.
 
-이 엔진은 DirectXTK(https://github.com/microsoft/DirectXTK)와 FBX SDK에 종속성을 가집니다.
+이 엔진은 DirectXTK( https://github.com/microsoft/DirectXTK )와 FBX SDK에 종속성을 가집니다.
 DirectXTK는 이미 저장소에 포함되어 있습니다. 하지만 FBX SDK는 스스로 받으셔야 합니다.(아래 자세히 설명)
 
 fbx파일을 자체포맷(hmodel, hanim)으로 바꾸는 FBXImporter라는 콘솔 어플리케이션도 저장소에서 제공해줍니다.
@@ -75,7 +75,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 
  The HEngine is 3D graphic Engine based on DirectX12.
 
- It has dependency on DirectXTK(https://github.com/microsoft/DirectXTK) and FBX SDK.
+ It has dependency on DirectXTK( https://github.com/microsoft/DirectXTK ) and FBX SDK.
  DirectXTK is already included in this repo but you have to download FBX SDK yourself to build this Engine.(details explained below)
  
  I also provided FBX Importer which changes fbx file into self format(hmodel, hanim). HEngine can directly load fbx files but it is slow
@@ -84,7 +84,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 [how to build HEngine and HFbxImporter]
 
 1. Download "fbx sdk 2020.1 VS2017" from this URL 
-(https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1)
+( https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1 )
 
 2. Install fbx sdk
 
