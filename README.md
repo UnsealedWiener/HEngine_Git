@@ -41,13 +41,15 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 HEngine은 정적 라이브러리로 빌드됩니다. 아래 설명대로 사용합니다.
 간단한 사용예시와 리소스는 ExampleGame이라는 프로젝트에 있으니 참고하시면 됩니다.
 
-1.  Output/HEngine/staticlibrary 경로에 있는 헤더 파일들을 게임 프로젝트에 추가합니다.
+1. HEngine 프로젝트를 빌드하면 Output 폴더에 헤더파일과 정적 라이브러리가 생성됩니다.
 
-2. 만약 DirectXTK의 마우스, 키보드, 게임패드를 사용하기 원하신다면 "DirectXTKHeaders"폴더에 있는 헤더 역시 프로젝트에 추가해줍니다.
+2.  Output/HEngine/staticlibrary 경로에 있는 헤더 파일들을 게임 프로젝트에 추가합니다.
 
-3. 추가 종속성에 HEngine.lib를 추가해줍니다.
+3. 만약 DirectXTK의 마우스, 키보드, 게임패드를 사용하기 원하신다면 "DirectXTKHeaders"폴더에 있는 헤더 역시 프로젝트에 추가해줍니다.
 
-4. 모든 자세한 사용 방법은 EngineInterface.h에 적혀있습니다.
+4. 추가 종속성에 HEngine.lib를 추가해줍니다.
+
+5. 모든 자세한 사용 방법은 EngineInterface.h에 적혀있습니다.
 
 [HFbxImporter 사용하는 법]
 
@@ -105,13 +107,15 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 The HEngine is built as static library. In order to use it, you have to follow instruction below. 
 Simple example of a game and using HEngine and resources are in ExampleGame project.
 
-1. Add the header files created in Output/HEngine/staticlibrary to your game project.
+1. Build "HEngine" project. You can get header files and static library from "Output"
 
-2. If you want to use DirectXTK mouse, keyboard and gamepad, add headers in "DirectXTKHeaders" to your game project as well.
+2. Add the header files created in Output/HEngine/staticlibrary to your game project.
 
-2. Add HEngine.lib as addtional dependency.
+3. If you want to use DirectXTK mouse, keyboard and gamepad, add headers in "DirectXTKHeaders" to your game project as well.
 
-3. Every usage of the HEngine should be written in EngineInterface.h.
+4. Add HEngine.lib as addtional dependency.
+
+5. Every usage of the HEngine should be written in EngineInterface.h.
 
 [how to use HFbxImporter]
 
