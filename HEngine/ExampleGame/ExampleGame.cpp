@@ -125,6 +125,99 @@ void ExampleGame::AddGrid()
 	}
 }
 
+void ExampleGame::OutputDebugString()
+{
+	static bool bReflection = true;
+	static bool bShadow = true;
+	static bool bSsao = true;
+
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F1))
+	{
+		bReflection = !bReflection;
+		m_p3DgraphicEngine->SetReflectionEffect(bReflection);
+	}
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F2))
+	{
+		bShadow = !bShadow;
+		m_p3DgraphicEngine->SetShadowEffect(bShadow);
+	}
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F3))
+	{
+		bSsao = !bSsao;
+		m_p3DgraphicEngine->SetSSAO(bSsao);
+	}
+
+	int startPosX = 100;
+	int startPosY = 100;
+
+	static std::string strRaytracing = "<F1> Raytracing(reflection) : ";
+	static std::string strShadowMap = "<F2> ShadowMap : ";
+	static std::string strSSAO = "<F3> SSAO : ";
+
+	DebugString debugString;
+
+	debugString.color = bReflection ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strRaytracing + (bReflection ? "On" : "Off");
+	debugString.posX = startPosX;
+	debugString.posY = startPosY;
+	m_p3DgraphicEngine->AddDebugString(debugString);
+
+	debugString.color = bShadow ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strShadowMap + (bShadow ? "On" : "Off");
+	debugString.posY += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
+
+	debugString.color = bSsao ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strSSAO + (bSsao ? "On" : "Off");
+	debugString.posY += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
+
+	debugString.color = Color(0.5f, 0.5f, 0.5f);
+	debugString.message = "MoveCamera : W/A/S/D & Mouse Left Click";
+	debugString.posY += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
+}
+
+void ExampleGame::CameraControl(float dTime)
+{
+	Camera* camera = m_p3DgraphicEngine->GetCamera();
+
+	//free camera
+	{
+		if (m_keyboardTracker.GetLastState().W)
+			camera->Walk(50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().S)
+			camera->Walk(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().A)
+			camera->Strafe(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().D)
+			camera->Strafe(+50.0f * dTime);
+
+		static int lastPosX = 0;
+		static int lastPosY = 0;
+
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
+		{
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
+		}
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::HELD)
+		{
+			int xVec = m_mouseTracker.GetLastState().x - lastPosX;
+			int yVec = m_mouseTracker.GetLastState().y - lastPosY;
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
+
+			float dx = XMConvertToRadians(0.25f * static_cast<float>(xVec));
+			float dy = XMConvertToRadians(0.25f * static_cast<float>(yVec));
+
+			camera->Pitch(dy);
+			camera->RotateY(dx);
+		}
+
+	}
+}
+
 void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHeight)
 {
 	HWND hWnd = InitWindow(hInstance, clientWidth, clientHeight);
@@ -197,51 +290,9 @@ void ExampleGame::Loop()
 	m_keyboardTracker.Update(m_keyboard->GetState());
 	m_mouseTracker.Update(m_pMouse->GetState());
 
-	Camera* camera =  m_p3DgraphicEngine->GetCamera();
-
-	//free camera
-	{
-		if (m_keyboardTracker.GetLastState().W)
-			camera->Walk(50.0f * dTime);
-		if (m_keyboardTracker.GetLastState().S)
-			camera->Walk(-50.0f * dTime);
-		if (m_keyboardTracker.GetLastState().A)
-			camera->Strafe(-50.0f * dTime);
-		if (m_keyboardTracker.GetLastState().D)
-			camera->Strafe(+50.0f * dTime);
-
-		static int lastPosX = 0;
-		static int lastPosY = 0;
-
-		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
-		{
-			lastPosX = m_mouseTracker.GetLastState().x;
-			lastPosY = m_mouseTracker.GetLastState().y;
-		}
-		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::HELD)
-		{
-			int xVec = m_mouseTracker.GetLastState().x - lastPosX;
-			int yVec = m_mouseTracker.GetLastState().y - lastPosY;
-			lastPosX = m_mouseTracker.GetLastState().x;
-			lastPosY = m_mouseTracker.GetLastState().y;
-
-			float dx = XMConvertToRadians(0.25f * static_cast<float>(xVec));
-			float dy = XMConvertToRadians(0.25f * static_cast<float>(yVec));
-
-			camera->Pitch(dy);
-			camera->RotateY(dx);
-		}
-
-	}
-
-	DebugString debugString;
-	debugString.color = Color(0.5f, 0.5f, 0.5f);
-	debugString.message = "MoveCamera : W/A/S/D & Mouse Left Click";
-	debugString.posX = 100;
-	debugString.posY = 100;
-
-
-	m_p3DgraphicEngine->AddDebugString(debugString);
+	
+	CameraControl(dTime);
+	OutputDebugString();
 
 	m_p3DgraphicEngine->Loop();
 }

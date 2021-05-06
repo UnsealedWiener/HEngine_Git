@@ -27,6 +27,8 @@ public:
 private:
 	HWND InitWindow(HINSTANCE hInstance, int clientWidth, int clientHeight);
 	void AddGrid();
+	void OutputDebugString();
+	void CameraControl(float dTime);
 
 };
 
