@@ -22,7 +22,7 @@ DirectXTK는 이미 저장소에 포함되어 있습니다. 하지만 FBX SDK는
 fbx파일을 자체포맷(hmodel, hanim)으로 바꾸는 FBXImporter라는 콘솔 어플리케이션도 저장소에서 제공해줍니다.
 HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 자체 포맷으로 변환 한 후 로드하는 것을 추천합니다.
 
-[HEngine과 HFbxImporter 빌드하는 법]
+[ExampleGame 빌드하는 법]
 
 1. 이 주소( https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1 )에서 "fbx sdk 2020.1 VS2017"를 다운받습니다.
 
@@ -30,13 +30,15 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 
 3. 설치된 경로에서 "2020.1" 폴더를 찾아  HEngine\Dependency 경로로 넣어줍니다.( 기본 설치 경로는 C:\Program Files\Autodesk\FBX\FBX SDK\2020.1 입니다.)
 
-4. HEngine.sln 을 열고 원하는 프로젝트를 선택해서 빌드합니다.
+4. HEngine.sln 을 열고 "ExampleGame" 프로젝트를 시작 프로젝트로 선택해서 빌드합니다.(프로젝트에 이미 종속성 세팅이 되어있습니다.)
 
-5. 결과물들은 "Output"이라는 폴더에 저장됩니다.
+5. 빌드된 HEngine은 정적 라이브러리로 생성되어 "Output"폴더에 저장됩니다.(ExampleGame이 이 폴더를 참조하도록 세팅했습니다.)
 
-[HEngine을 게임에서 사용하는 법]
+**만약 빌드하는데 문제가 있으면 이 링크( https://drive.google.com/drive/folders/1YEpGSekE0c2IfyS7ZRwMAN6UwBWoBIx0?usp=sharing )로 실행파일만 다운 받을 수 있습니다.**
 
-HEngine은 스태틱 라이브러리로 빌드됩니다. 아래 설명대로 사용합니다.
+[HEngine을 자신의 게임에서 사용하는 법]
+
+HEngine은 정적 라이브러리로 빌드됩니다. 아래 설명대로 사용합니다.
 간단한 사용예시와 리소스는 ExampleGame이라는 프로젝트에 있으니 참고하시면 됩니다.
 
 1.  Output/HEngine/staticlibrary 경로에 있는 헤더 파일들을 게임 프로젝트에 추가합니다.
@@ -81,7 +83,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
  I also provided FBX Importer which changes fbx file into self format(hmodel, hanim). HEngine can directly load fbx files but it is slow
  so i recommend using my self format when you use this engine.
  
-[how to build HEngine and HFbxImporter]
+[how to build Example Game]
 
 1. Download "fbx sdk 2020.1 VS2017" from this URL 
 ( https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-1 )
@@ -91,9 +93,12 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 3. Move the folder named "2020.1" from installed address to HEngine\Dependency
 (default installation address is C:\Program Files\Autodesk\FBX\FBX SDK\2020.1)
 
-4. Open HEngine.sln and select the project and build.
+4. Open HEngine.sln and select the "ExampleGame" as start project and build.(Dependency setting is already done.)
 
-5. The result will be created in "Output" folder.
+5. The Built "HEngine" is created as static library in "Output" folder.("ExampleGame" is referencing this address.)
+
+**If you have problem with building the project you can download excutable file from following link
+( https://drive.google.com/drive/folders/1YEpGSekE0c2IfyS7ZRwMAN6UwBWoBIx0?usp=sharing )**
 
 [how to use HEngine in your game]
 
