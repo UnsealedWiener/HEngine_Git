@@ -107,7 +107,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 The HEngine is built as static library. In order to use it, you have to follow instruction below. 
 Simple example of a game and using HEngine and resources are in ExampleGame project.
 
-1. Build "HEngine" project. You can get header files and static library from "Output"
+1. Build "HEngine" project. This will create header files and static library in "Output" folder.
 
 2. Add the header files created in Output/HEngine/staticlibrary to your game project.
 
