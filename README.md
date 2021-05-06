@@ -6,7 +6,8 @@
 
 빌드 요구사항 : 
 
-Window 10 버전 : Window 10(20H1)\n
+Window 10 버전 : Window 10(20H1)
+
 Windows SDK 버전 : 10.0.19041.0
 
 레이트레이싱 효과 하드웨어 요구사항 : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
@@ -65,6 +66,7 @@ HFbxImporter는 콘솔 어플리케이션입니다.
 Requirements for Build  : 
 
 Window 10 version : Window 10(20H1)
+
 Windows SDK version : 10.0.19041.0
 
 Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
