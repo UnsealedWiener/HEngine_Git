@@ -5,6 +5,7 @@
 [최소 요구 사항]
 
 빌드 요구사항 : 
+
 Window 10 버전 : Window 10(20H1)
 Windows SDK 버전 : 10.0.19041.0
 
@@ -62,6 +63,7 @@ HFbxImporter는 콘솔 어플리케이션입니다.
 [Requirements]
 
 Requirements for Build  : 
+
 Window 10 version : Window 10(20H1)
 Windows SDK version : 10.0.19041.0
 
