@@ -34,7 +34,7 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 
 (빌드된 HEngine은 정적 라이브러리로 생성되어 "Output"폴더에 저장됩니다.(ExampleGame이 이 폴더를 참조하도록 세팅했습니다.))
 
-**만약 빌드하는데 문제가 있으면 이 링크( https://drive.google.com/file/d/1Qg7axxG41Ppm2KidCauZgfzpFqqPL5mi/view?usp=sharing )로 실행파일만 다운 받을 수 있습니다.**
+**만약 빌드하는데 문제가 있으면 HEngine/Excutable/ExampleGame.exe로 결과물만 확인 할 수 있습니다.**
 
 [HEngine을 자신의 게임에서 사용하는 법]
 
@@ -99,8 +99,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 
 (The Built "HEngine" is created as static library in "Output" folder.("ExampleGame" is referencing this address.))
 
-**If you have problem with building the project you can download excutable file from following link
-( https://drive.google.com/file/d/1Qg7axxG41Ppm2KidCauZgfzpFqqPL5mi/view?usp=sharing )**
+**If you have problem with building the project, you can just check result with HEngine/Excutable/Example.exe**
 
 [how to use HEngine in your game]
 
