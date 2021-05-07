@@ -233,31 +233,31 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	m_p3DgraphicEngine->StartSetting();
 
 	//디폴트 스카이박스 세팅
-	m_p3DgraphicEngine->LoadSkyBox(L"Media/Skybox/Skybox.dds");
+	m_p3DgraphicEngine->LoadSkyBox(L"../Media/Skybox/Skybox.dds");
 	//디폴트 폰트 세팅
-	m_p3DgraphicEngine->LoadFont(L"Media/Fonts/SegoeUI_18.spritefont");
+	m_p3DgraphicEngine->LoadFont(L"../Media/Fonts/SegoeUI_18.spritefont");
 
-	HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD3.hmodel");
-	HModelData* pHModel_Field = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Field0/Field0.hmodel");
+	HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("../Media/Model/Crunch/Crunch_LOD3.hmodel");
+	HModelData* pHModel_Field = m_p3DgraphicEngine->CreateModelFromHModelFile("../Media/Model/Field0/Field0.hmodel");
 
 	std::vector<std::string> animList;
-	animList.push_back("Media/Model/Crunch/Crunch@idle.hanim");
-	animList.push_back("Media/Model/Crunch/Crunch@attack01.hanim");
+	animList.push_back("../Media/Model/Crunch/Crunch@idle.hanim");
+	animList.push_back("../Media/Model/Crunch/Crunch@attack01.hanim");
 
 	HAnimData* pHAnim = m_p3DgraphicEngine->CreateAnimationFromHAnimFiles(animList);
 
-	HMaterialData* pHMat_Spaceshipt = m_p3DgraphicEngine->CreateMaterial(L"Media/Material/spaceShip/spaceShip_albedo.png",
-		L"Media/Material/spaceShip/spaceShip_roughness.png",
-		L"Media/Material/spaceShip/spaceShip_metallic.png",
-		L"Media/Material/spaceShip/spaceShip_ao.png",
-		L"Media/Material/spaceShip/spaceShip_normal.png",
-		L"Media/Material/spaceShip/spaceShip_height.png");
+	HMaterialData* pHMat_Spaceshipt = m_p3DgraphicEngine->CreateMaterial(L"../Media/Material/spaceShip/spaceShip_albedo.png",
+		L"../Media/Material/spaceShip/spaceShip_roughness.png",
+		L"../Media/Material/spaceShip/spaceShip_metallic.png",
+		L"../Media/Material/spaceShip/spaceShip_ao.png",
+		L"../Media/Material/spaceShip/spaceShip_normal.png",
+		L"../Media/Material/spaceShip/spaceShip_height.png");
 
-	HMaterialData* pHMat_Bamboo = m_p3DgraphicEngine->CreateMaterial(L"Media/Material/bamboo/bamboo_albedo.png",
-		L"Media/Material/bamboo/bamboo_roughness.png",
-		L"Media/Material/bamboo/bamboo_metallic.png",
-		L"Media/Material/bamboo/bamboo_ao.png",
-		L"Media/Material/bamboo/bamboo_normal.png",
+	HMaterialData* pHMat_Bamboo = m_p3DgraphicEngine->CreateMaterial(L"../Media/Material/bamboo/bamboo_albedo.png",
+		L"../Media/Material/bamboo/bamboo_roughness.png",
+		L"../Media/Material/bamboo/bamboo_metallic.png",
+		L"../Media/Material/bamboo/bamboo_ao.png",
+		L"../Media/Material/bamboo/bamboo_normal.png",
 		nullptr);
 
 	//그래픽 자원을 생성하는 명령을 그래픽 카드에 보내줌
