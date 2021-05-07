@@ -14,7 +14,7 @@ Windows SDK 버전 : 10.0.19041.0
 
 [간단한 설명]
 
-**결과물만 확인하고 싶으시면 HEngine/Excutable/ExampleGame.exe 만 실행시키면 됩니다.**
+**결과물만 확인하고 싶으시면 HEngine/Executable/ExampleGame.exe 만 실행시키면 됩니다.**
 
 HEngine은 DirectX12에 기반한 3D 그래픽 엔진입니다.
 
@@ -36,7 +36,7 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 
 (빌드된 HEngine은 정적 라이브러리로 생성되어 "Output"폴더에 저장됩니다.(ExampleGame이 이 폴더를 참조하도록 세팅했습니다.))
 
-**만약 빌드하는데 문제가 있으면 HEngine/Excutable/ExampleGame.exe로 결과물만 확인 할 수 있습니다.**
+**만약 빌드하는데 문제가 있으면 HEngine/Executable/ExampleGame.exe로 결과물만 확인 할 수 있습니다.**
 
 [HEngine을 자신의 게임에서 사용하는 법]
 
@@ -79,7 +79,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 
 [Instruction]
 
-**If you want to skip everyting and just see the output, run HEngine/Excutable/ExampleGame.exe.**
+**If you want to skip everyting and just see the output, run HEngine/Executable/ExampleGame.exe.**
 
  The HEngine is 3D graphic Engine based on DirectX12.
 
@@ -103,7 +103,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 
 (The Built "HEngine" is created as static library in "Output" folder.("ExampleGame" is referencing this address.))
 
-**If you have problem with building the project, you can just check result with HEngine/Excutable/Example.exe**
+**If you have problem with building the project, you can just check result with HEngine/Executable/Example.exe**
 
 [how to use HEngine in your game]
 
