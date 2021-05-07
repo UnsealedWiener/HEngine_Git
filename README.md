@@ -14,6 +14,8 @@ Windows SDK 버전 : 10.0.19041.0
 
 [간단한 설명]
 
+**결과물만 확인하고 싶으시면 HEngine/Excutable/ExampleGame.exe 만 실행시키면 됩니다.**
+
 HEngine은 DirectX12에 기반한 3D 그래픽 엔진입니다.
 
 이 엔진은 DirectXTK( https://github.com/microsoft/DirectXTK )와 FBX SDK에 종속성을 가집니다.
@@ -76,6 +78,8 @@ Windows SDK version : 10.0.19041.0
 Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidia GeForce 10-, 20-, or 30-series
 
 [Instruction]
+
+**If you want to skip everyting and just see the output, run HEngine/Excutable/ExampleGame.exe.**
 
  The HEngine is 3D graphic Engine based on DirectX12.
 
