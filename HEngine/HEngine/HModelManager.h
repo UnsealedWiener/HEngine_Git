@@ -127,7 +127,7 @@ private:
 	void PickZeroDepthMeshBone(HFbxImporter* pFbxImporter, HModel* pModel);
 	void CreateRaytracingResource(HModel* pModel, ResourceUploadBatch& resourceBatch);
 
-	void CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, AnimationData* pFbxAnimData);
+	void CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, HFbxImporter* pFbxImporter);
 	void CreateAnimDataFromLoadedHAnimFile(HBoneAnims* pHAnim, HAnimFormat* pHAnimFormat);
 	//void CreateNodesTransformMatrixBufferRecursively(HMesh* pNode, Matrix AxisChange, std::vector<XMFLOAT3X4A>& transformMats);
 	//void CreateRaytracingGeometryDescRecursively(HMesh* pNode, HModel* pModel, UINT& transformBufferIndex, std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& rtDescs);

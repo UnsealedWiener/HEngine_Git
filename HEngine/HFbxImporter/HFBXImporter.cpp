@@ -50,8 +50,8 @@ bool HFbxImporter::ImportModel(const char* filename)
 
 	std::string fullPath = filename;
 
-	std::size_t dot = fullPath.find_last_of(".");
-	std::size_t slash = fullPath.find_last_of("/");
+	std::size_t dot = fullPath.rfind(".");
+	std::size_t slash = fullPath.rfind("/");
 
 	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);
 
@@ -62,6 +62,7 @@ bool HFbxImporter::ImportModel(const char* filename)
 	m_pImporter->Import(pScene);
 
 	//fbx의 좌표계 정보를 불러오고 이를 기반으로 directX 좌표계로의 변환 matrix 생성  
+
 
 	m_axisSystem = pScene->GetGlobalSettings().GetAxisSystem();
 	CalAxisMaxToDirectX(m_axisSystem);
@@ -92,8 +93,8 @@ bool HFbxImporter::ImportAnimation(const char* filename)
 
 	std::string fullPath = filename;
 
-	std::size_t dot = fullPath.find_last_of(".");
-	std::size_t slash = fullPath.find_last_of("/");
+	std::size_t dot = fullPath.rfind(".");
+	std::size_t slash = fullPath.rfind("/");
 
 	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);
 
@@ -103,14 +104,36 @@ bool HFbxImporter::ImportAnimation(const char* filename)
 	// Import the contents of the file into the scene.
 	m_pImporter->Import(pScene);
 
-	//if (m_axisSystem != pScene->GetGlobalSettings().GetAxisSystem())
-	//{
-	//	HerrorMessage(L"the animation's axisSystem doesn't match the model.");
-	//	throw std::exception("the animation's axisSystem doesn't match the model.");
-	//}
-	
+	m_axisSystem = pScene->GetGlobalSettings().GetAxisSystem();
+	CalAxisMaxToDirectX(m_axisSystem);
+
 	std::string fileName = filename;
-	std::string animName = fileName.substr(fileName.find_last_of("@")+ 1 , fileName.find_last_of(".FBX") - fileName.find_last_of("@") - 4);
+
+	std::size_t fbxPos0 = fileName.rfind(".FBX");
+	std::size_t fbxPos1 = fileName.rfind(".fbx");
+
+	std::size_t fbxPos;
+	if (fbxPos0 != std::string::npos)
+	{
+		fbxPos = fbxPos0;
+	}
+	else if (fbxPos1 != std::string::npos)
+	{
+		fbxPos = fbxPos1;
+	}
+	else
+	{
+		throw;
+	}
+
+	std::size_t snailPos = fileName.rfind("@");
+
+	if (snailPos == std::string::npos)
+	{
+		throw;
+	}
+
+	std::string animName = fileName.substr(snailPos + 1 , fbxPos - snailPos - 1);
 
 	ProcessAnimations(pScene, animName);
 
@@ -897,6 +920,7 @@ void HFbxImporter::WriteHAnimFile()
 	unsigned int allBoneCount = m_animData.allBoneAnim.size();
 
 	writeFile.write(reinterpret_cast<char*>(&allBoneCount), sizeof(unsigned int));
+	writeFile.write(reinterpret_cast<char*>(&m_axisChange), sizeof(XMFLOAT4X4));
 
 	for (int i = 0; i < allBoneCount; i++)
 	{

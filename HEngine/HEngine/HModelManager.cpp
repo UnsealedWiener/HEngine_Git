@@ -127,14 +127,16 @@ HAnimData* HModelManager::CreateAnimationFromHAnimFiles(std::vector<std::string>
 void HModelManager::CreateAnimationFromImportedFbx(HFbxImporter* pFbxImporter, HAnim* pAnim)
 {
 	std::unique_ptr<HBoneAnims> pHAnim = std::make_unique<HBoneAnims>();
-	CreateAnimDataFromImportedFbx(pHAnim.get(), &pFbxImporter->m_animData);
+	CreateAnimDataFromImportedFbx(pHAnim.get(), pFbxImporter);
 	pAnim->rawData.animBundle[pFbxImporter->m_animData.name] = std::move(pHAnim);
 }
 
-void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, AnimationData* pFbxAnimData)
+void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, HFbxImporter* pFbxImporter)
 {
-	pHAnim->totalTime = pFbxAnimData->totalTime;
+	AnimationData* pFbxAnimData = &pFbxImporter->m_animData;
 
+	pHAnim->totalTime = pFbxAnimData->totalTime;
+	pHAnim->AxisSystempModify = pFbxImporter->m_axisChange;
 	for (int i = 0; i < pFbxAnimData->allBoneAnim.size(); i++)
 	{
 		HBoneAnim pHBoneAnim;
@@ -160,7 +162,7 @@ void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, AnimationD
 void HModelManager::CreateAnimDataFromLoadedHAnimFile(HBoneAnims* pHAnim, HAnimFormat* pHAnimFormat)
 {
 	pHAnim->totalTime = pHAnimFormat->header.totalTime;
-
+	pHAnim->AxisSystempModify = pHAnimFormat->axisSystemModify;
 	for (int i = 0; i < pHAnimFormat->header.boneCount; i++)
 	{
 		HBoneAnim pHBoneAnim;
@@ -1128,7 +1130,7 @@ void HModelManager::UpdateBoneAnimRecusively_local_common(std::vector<Matrix>& a
 
 	currBoneTM *= parentTM;
 
-	instanceBoneTM[pBone->name] = invGlobalTTM * currBoneTM;
+	instanceBoneTM[pBone->name] =  currBoneTM;
 	Matrix TMforSave = (invGlobalTTM * currBoneTM).Transpose();
 	allBoneData.push_back(TMforSave);
 

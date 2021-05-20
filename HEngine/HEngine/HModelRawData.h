@@ -68,6 +68,7 @@ struct HBoneAnim
 struct HBoneAnims
 {
 	float totalTime;
+	Matrix AxisSystempModify;
 	std::vector<HBoneAnim> boneAnim;
 };
 

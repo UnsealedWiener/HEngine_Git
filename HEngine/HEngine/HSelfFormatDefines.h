@@ -86,5 +86,6 @@ struct HAnim_Bone
 struct HAnimFormat
 {
 	HAnim_Header header;
+	XMFLOAT4X4	 axisSystemModify;
 	HAnim_Bone* pBone;
 };

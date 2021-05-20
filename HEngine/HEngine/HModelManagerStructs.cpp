@@ -33,6 +33,12 @@ void HModel::SetAnimation(HAnimData* pAnimData)
 
 	for (auto& e : pAnim->rawData.animBundle)
 	{
+		if (e.second->AxisSystempModify != rawData.AxisSystempModify)
+		{
+			HerrorMessage(L"The model axisSystem and animation axisSystem don't match.")
+				throw;
+		}
+
 		std::vector<HBoneAnim>& boneAnim = e.second->boneAnim;
 
 		for (int i = 0; i < rawData.pAllBoneNodes.size(); i++)

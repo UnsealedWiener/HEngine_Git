@@ -104,6 +104,7 @@ HAnimFormat* HSelfFormatReader::ReadHAnimFile(const char* file)
 	std::ifstream readFile(fileName.c_str(), std::ostream::binary);
 
 	readFile.read(reinterpret_cast<char*>(&m_curruntHAnim->header), sizeof(HAnim_Header));
+	readFile.read(reinterpret_cast<char*>(&m_curruntHAnim->axisSystemModify), sizeof(XMFLOAT4X4));
 	
 	if (m_curruntHAnim->header.boneCount != 0)
 	{
