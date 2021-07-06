@@ -1,15 +1,19 @@
 #pragma once
 #include"HManagerController.h"
 #include "EngineInterface.h"
-
+#include<map>
 class HUIManager;
 
 struct HUI : public HUIData
 {
+	bool bDrawOnOff = true;
 	std::weak_ptr<UINT> pTextureIndex;
-	HManagerController<HUIManager, std::unordered_map<void*, std::unique_ptr<HUI>>> managerController;
+	HManagerController_vector<HUIManager,  std::unique_ptr<HUI>> managerController;
+	//HManagerController<HUIManager, std::vector<std::unique_ptr<HUI>>> managerController;
+
 	void Delete()override;
 	void SetSprite(HSpriteData* pSprite)override;
+	void SetDrawOnOff(bool onOff)override;
 };
 
 enum class RootSig_UI

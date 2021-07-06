@@ -6,6 +6,7 @@
 #include"HBufferManager.h"
 #include"SkinAnim_Raytracing.hlsl.h"
 
+
 HModelManager* HModelManager::GetInstance()
 {
 	static HModelManager modelManager;
@@ -18,9 +19,10 @@ void HModelManager::Initialize(DeviceResources* pDeviceResources, GraphicsMemory
 	m_pGraphicMemory = pGraphicMemory;
 	m_pCamera = pCamera;
 
-	m_pTopLevelAccelerationStructures.resize(m_pDeviceResources->GetBackBufferCount());
-	m_pTopLevelAccelerationStructureScratches.resize(m_pDeviceResources->GetBackBufferCount());
-	m_pRaytracingInstanceDescs.resize(m_pDeviceResources->GetBackBufferCount());
+	//m_pTopLevelAccelerationStructures.resize(m_pDeviceResources->GetBackBufferCount());
+	//m_pTopLevelAccelerationStructureScratches.resize(m_pDeviceResources->GetBackBufferCount());
+	//m_pRaytracingInstanceDescs.resize(m_pDeviceResources->GetBackBufferCount());
+	
 	//m_pAllInstacedVertices.resize(m_pDeviceResources->GetBackBufferCount());
 
 	CreateComputeRootSignature();
@@ -45,7 +47,7 @@ HModelData* HModelManager::CreateModelFromFbxFile(std::string fbxName, ResourceU
 	CreateModelFromImportedFbx(pFbxImporter.get(), resourceBatch, pModel.get());
 
 	pModel->pRawData = &pModel->rawData;
-	pModel->managerController = HManagerController(this, &m_models, pModel.get());
+	pModel->managerController = HManagerController_map(this, &m_models, pModel.get());
 	m_models[pModel.get()] = pModel;
 
 	return pModel.get();
@@ -68,7 +70,7 @@ HAnimData* HModelManager::CreateAnimationFromFbxFiles(std::vector<std::string> f
 		CreateAnimationFromImportedFbx(pFbxImporter.get(), pAnim.get());
 	}
 	pAnim->pRawData = &pAnim->rawData;
-	pAnim->managerController = HManagerController(this, &m_anims, pAnim.get());
+	pAnim->managerController = HManagerController_map(this, &m_anims, pAnim.get());
 
 	m_anims[pAnim.get()] = pAnim;
 
@@ -90,7 +92,7 @@ HModelData* HModelManager::CreateModelFromHModelFile(std::string fbxName, Resour
 	CreateModelFromLoadedHModelFile(pHModel, pModel.get(), resourceBatch);
 
 	pModel->pRawData = &pModel->rawData;
-	pModel->managerController = HManagerController(this, &m_models, pModel.get());
+	pModel->managerController = HManagerController_map(this, &m_models, pModel.get());
 	m_models[pModel.get()] = pModel;
 
 	return pModel.get();
@@ -116,7 +118,7 @@ HAnimData* HModelManager::CreateAnimationFromHAnimFiles(std::vector<std::string>
 	}
 
 	pAnim->pRawData = &pAnim->rawData;
-	pAnim->managerController = HManagerController(this, &m_anims, pAnim.get());
+	pAnim->managerController = HManagerController_map(this, &m_anims, pAnim.get());
 
 	m_anims[pAnim.get()] = pAnim;
 
@@ -127,14 +129,16 @@ HAnimData* HModelManager::CreateAnimationFromHAnimFiles(std::vector<std::string>
 void HModelManager::CreateAnimationFromImportedFbx(HFbxImporter* pFbxImporter, HAnim* pAnim)
 {
 	std::unique_ptr<HBoneAnims> pHAnim = std::make_unique<HBoneAnims>();
-	CreateAnimDataFromImportedFbx(pHAnim.get(), &pFbxImporter->m_animData);
+	CreateAnimDataFromImportedFbx(pHAnim.get(), pFbxImporter);
 	pAnim->rawData.animBundle[pFbxImporter->m_animData.name] = std::move(pHAnim);
 }
 
-void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, AnimationData* pFbxAnimData)
+void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, HFbxImporter* pFbxImporter)
 {
-	pHAnim->totalTime = pFbxAnimData->totalTime;
+	AnimationData* pFbxAnimData = &pFbxImporter->m_animData;
 
+	pHAnim->totalTime = pFbxAnimData->totalTime;
+	pHAnim->AxisSystempModify = pFbxImporter->m_axisChange;
 	for (int i = 0; i < pFbxAnimData->allBoneAnim.size(); i++)
 	{
 		HBoneAnim pHBoneAnim;
@@ -160,7 +164,7 @@ void HModelManager::CreateAnimDataFromImportedFbx(HBoneAnims* pHAnim, AnimationD
 void HModelManager::CreateAnimDataFromLoadedHAnimFile(HBoneAnims* pHAnim, HAnimFormat* pHAnimFormat)
 {
 	pHAnim->totalTime = pHAnimFormat->header.totalTime;
-
+	pHAnim->AxisSystempModify = pHAnimFormat->axisSystemModify;
 	for (int i = 0; i < pHAnimFormat->header.boneCount; i++)
 	{
 		HBoneAnim pHBoneAnim;
@@ -629,21 +633,7 @@ void HModelManager::MergeVertexIndexData()
 		m_allVerticesCount = m_allVertices.size();
 		m_allIndicesCount = m_allIndices.size();
 		m_bModelDirty = false;
-	}
-}
-
-void HModelManager::CheckInstanceCount()
-{
-	for (auto& model : m_models)
-	{
-		UINT instanceCount = 0;
-
-		for (auto& instancesPerFlag : model.second->instances)
-		{
-			instanceCount += instancesPerFlag.second.size();
-		}
-
-		model.second->visibleInstanceCount = instanceCount;
+		m_bRaytracingDirty = true;
 	}
 }
 
@@ -652,7 +642,7 @@ void HModelManager::CheckFrustumCulling()
 	XMMATRIX view = m_pCamera->GetView();
 	XMVECTOR det;
 	Matrix invView = XMMatrixInverse(&det, view);
-
+	m_visibleInstances.clear();
 	m_visibleInstance = 0;
 	
 	if (m_pCamera->GetCamMode() == CameraMode::ePerspective)
@@ -662,37 +652,36 @@ void HModelManager::CheckFrustumCulling()
 		for (auto& e : m_models)
 		{
 			HModel* pModel = e.second.get();
-			pModel->visibleInstanceCount_temp = 0;
+			pModel->visibleInstanceCount = 0;
 			
-			for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+			for (const PSOTYPE& psoType : PSOTYPE())
 			{
-				pModel->visibleInstances[flag].clear();
+				pModel->visibleInstances[psoType].clear();
 
-				for (auto& instance : pModel->instances[flag])
+				for (auto& instance : pModel->instances[psoType])
 				{
+
 					HInstance* pInstance = instance.second.get();
-
 					Matrix world = pInstance->worldTM;
-					Matrix invWorld = world.Invert();
+					Matrix localToView;
+					localToView *= world;
+					localToView *= view;
 
-					Matrix viewToLocal;
-					viewToLocal *= invView;
-					viewToLocal *= invWorld;
+					BoundingBox viewBox;
+					pInstance->pModel.lock().get()->rawData.boundingBox.Transform(viewBox, localToView);
 
-					BoundingFrustum localFrustum;
-					boundingFrustum.Transform(localFrustum, viewToLocal);
-
-					if (localFrustum.Contains(pModel->rawData.boundingBox) != DirectX::DISJOINT)
+					if (boundingFrustum.Contains(viewBox) != DirectX::DISJOINT)
 					{
 						pInstance->bIsInCameraRange = true;
-						pModel->visibleInstances[flag].push_back(pInstance);
-						pModel->visibleInstanceCount_temp++;
+						pModel->visibleInstances[psoType].push_back(pInstance);
+						pModel->visibleInstanceCount++;
 						m_visibleInstance++;
 					}
 					else
 					{
 						pInstance->bIsInCameraRange = false;
 					}
+					
 				}
 			}
 		}
@@ -704,38 +693,38 @@ void HModelManager::CheckFrustumCulling()
 		for (auto& e : m_models)
 		{
 			HModel* pModel = e.second.get();
-			pModel->visibleInstanceCount_temp = 0;
+			pModel->visibleInstanceCount = 0;
+			
 
-
-			for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+			for (const PSOTYPE& psoType : PSOTYPE())
 			{
-				pModel->visibleInstances[flag].clear();
+				pModel->visibleInstances[psoType].clear();
 
-				for (auto& instance : pModel->instances[flag])
+				for (auto& instance : pModel->instances[psoType])
 				{
+					
 					HInstance* pInstance = instance.second.get();
-
 					Matrix world = pInstance->worldTM;
-					Matrix invWorld = world.Invert();
+					Matrix localToView;
+					localToView *= world;
+					localToView *= view;
 
-					Matrix viewToLocal;
-					viewToLocal *= invView;
-					viewToLocal *= invWorld;
+					BoundingBox viewBox;
+					pInstance->pModel.lock().get()->rawData.boundingBox.Transform(viewBox, localToView);
 
-					BoundingBox localBox;
-					boundingBox.Transform(localBox, viewToLocal);
-
-					if (localBox.Contains(pInstance->pModel.lock().get()->rawData.boundingBox) != DirectX::DISJOINT)
+					if (boundingBox.Contains(viewBox) != DirectX::DISJOINT)
 					{
 						pInstance->bIsInCameraRange = true;
-						pModel->visibleInstances[flag].push_back(pInstance);
-						pModel->visibleInstanceCount_temp++;
+						pModel->visibleInstances[psoType].push_back(pInstance);
+						pModel->visibleInstanceCount++;
+						m_visibleInstances.push_back(pInstance);
 						m_visibleInstance++;
 					}
 					else
 					{
 						pInstance->bIsInCameraRange = false;
 					}
+				
 				}
 			}
 		}
@@ -764,10 +753,10 @@ void HModelManager::UpdateResource_raterize()
 		UpdatePerModelResouce_rasterize(model);
 
 		UINT instanceOffset = 0;
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			UpdatePerPSOResource_rasterize(model, flag, instanceOffset);
-			UpdatePerInstanceResouce_rasterize(model, flag);
+			UpdatePerPSOResource_rasterize(model, psoType, instanceOffset);
+			UpdatePerInstanceResouce_rasterize(model, psoType);
 		}
 	}
 }
@@ -781,12 +770,15 @@ void HModelManager::UpdatePerModelResouce_rasterize(HModel* pHModel)
 	pHModel->perModelCB.Reset(m_pGraphicMemory->AllocateConstant(CB_perModel));
 }
 
-void HModelManager::UpdatePerInstanceResouce_rasterize(HModel* pHModel, unsigned char shaderFlag)
+void HModelManager::UpdatePerInstanceResouce_rasterize(HModel* pHModel, PSOTYPE psoType)
 {
-	UpdatePerInstanceStructuredBuffer_rasterize(pHModel->visibleInstances[shaderFlag], &pHModel->structuredBuffer_instances[shaderFlag]);
+	UpdatePerInstanceStructuredBuffer_onlyVisible_rasterize(pHModel->visibleInstances[psoType], &pHModel->structuredBuffer_instances[psoType]);
+	
+	//UpdatePerInstanceStructuredBuffer_rasterize(pHModel->visibleInstances[psoType], &pHModel->structuredBuffer_instances[psoType]);
+
 }
 
-void HModelManager::UpdatePerPSOResource_rasterize(HModel* pHModel, unsigned char shaderFlag, UINT& instanceOffset)
+void HModelManager::UpdatePerPSOResource_rasterize(HModel* pHModel, PSOTYPE psoType, UINT& instanceOffset)
 {
 	HStructuredBuffer_PerPSO_Rasterize perPSOData;
 	perPSOData.instanceNumOffset = instanceOffset;
@@ -800,14 +792,14 @@ void HModelManager::UpdatePerPSOResource_rasterize(HModel* pHModel, unsigned cha
 		&perPSOData,
 		bufferSize);
 
-	pHModel->structuredBuffer_perPso[shaderFlag].Reset(graphicResourceCB);
+	pHModel->structuredBuffer_perPso[psoType].Reset(graphicResourceCB);
 
-	instanceOffset += pHModel->visibleInstances[shaderFlag].size();
+	instanceOffset += pHModel->visibleInstances[psoType].size();
 }
 
 
 
-void HModelManager::UpdatePerInstanceStructuredBuffer_rasterize(/*std::unordered_map<void*, std::shared_ptr<HInstance>> const& instances*/
+void HModelManager::UpdatePerInstanceStructuredBuffer_onlyVisible_rasterize(/*std::unordered_map<void*, std::shared_ptr<HInstance>> const& instances*/
 	std::vector<HInstance*>& instances, SharedGraphicsResource* pStructuredBuffer)
 {
 	if (instances.size() == 0)
@@ -853,6 +845,7 @@ void HModelManager::UpdatePerInstanceStructuredBuffer_rasterize(/*std::unordered
 	pStructuredBuffer->Reset(graphicResourceCB);
 }
 
+
 //void HModelManager::UpdateperInstanceBoneAnimationResouce_rasterize(HModel* pHModel, unsigned char shaderFlag)
 //{
 //	UINT boneCount = pHModel->rawData.boneCount;
@@ -892,12 +885,10 @@ void HModelManager::UpdateAllInstancedBoneAnimResource_common()
 		if (pHModel->rawData.boneCount == 0)
 			continue;
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			for (auto& instance : pHModel->visibleInstances[flag])
+			for (auto& instance : pHModel->visibleInstances[psoType])
 			{
-				//HInstance* pHinstance = instance.second.get();
-
 				UpdateInstanceBoneAnimResource_common(boneData, instance, pHModel);
 			}
 		}
@@ -1128,7 +1119,7 @@ void HModelManager::UpdateBoneAnimRecusively_local_common(std::vector<Matrix>& a
 
 	currBoneTM *= parentTM;
 
-	instanceBoneTM[pBone->name] = invGlobalTTM * currBoneTM;
+	instanceBoneTM[pBone->name] =  currBoneTM;
 	Matrix TMforSave = (invGlobalTTM * currBoneTM).Transpose();
 	allBoneData.push_back(TMforSave);
 
@@ -1327,9 +1318,9 @@ void HModelManager::UpdatePerInstanceResource_raytracing()
 		modelIndex++;
 		UINT instanceIndexInModel = 0;
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			for (auto& instance : pModel->visibleInstances[flag])
+			for (auto& instance : pModel->visibleInstances[psoType])
 			{
 				HInstance* pHInstance = instance;
 
@@ -1401,9 +1392,9 @@ unsigned int HModelManager::GetTotalDynamicVertexCount()
 			continue;
 		}
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			totalDynamicVertex += pModel->visibleInstances[flag].size() * pModel->rawData.vertexData.size();
+			totalDynamicVertex += pModel->visibleInstances[psoType].size() * pModel->rawData.vertexData.size();
 		}
 	}
 
@@ -1455,9 +1446,9 @@ void HModelManager::CreatePerDynamicModelDataForComputeShader()
 		perModel.vertexCount = pModel->rawData.vertexData.size();
 
 		int totalInstanceCount = 0;
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			totalInstanceCount += pModel->visibleInstances[flag].size();
+			totalInstanceCount += pModel->visibleInstances[psoType].size();
 		}
 
 		perModel.instanceCount = totalInstanceCount;
@@ -1576,7 +1567,7 @@ void HModelManager::UpdatePerModelResource_raytracing()
 		{
 			raytracingStructuredBuffer.vertexOffsetInEntireBuffer = dynamicModelInstanceOffset;
 			raytracingStructuredBuffer.isDynamicModel = TRUE;
-			dynamicModelInstanceOffset += pModel->rawData.vertexData.size() * pModel->visibleInstanceCount_temp;
+			dynamicModelInstanceOffset += pModel->rawData.vertexData.size() * pModel->visibleInstanceCount;
 		}
 
 		perModel.push_back(raytracingStructuredBuffer);
@@ -1642,7 +1633,6 @@ void HModelManager::UpdatePerNodeResourceRecusively_raytracing(HMesh* pNode, Mat
 	{
 		UpdatePerNodeResourceRecusively_raytracing(pNode->pChildNode[i], AxisChange, perNode);
 	}
-
 }
 
 void HModelManager::UpdateRaytracingBottomLevelAccelerationStructure_raytracing(ID3D12GraphicsCommandList4* cmdList)
@@ -1661,10 +1651,9 @@ void HModelManager::UpdateRaytracingBottomLevelAccelerationStructure_raytracing(
 		if (pModel->rawData.boneCount == 0)
 			continue;
 
-
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			for (auto& instance : pModel->visibleInstances[flag])
+			for (auto& instance : pModel->visibleInstances[psoType])
 			{
 				HInstance* pHInstance = instance;
 
@@ -1689,9 +1678,6 @@ void HModelManager::UpdateRaytracingBottomLevelAccelerationStructure_raytracing(
 				geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
 				geometryDesc.Triangles = triangleDesc;
 				geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
-
-
-				//	CreateBLAS(cmdList, pHInstance, geometryDesc);
 
 				if (pHInstance->bottomLevelAccelerationStructureBuffer.Get() == nullptr)
 					CreateBLAS(cmdList, pHInstance, geometryDesc);
@@ -1803,9 +1789,13 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 	{
 		HModel* pModel = model.second.get();
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			for (auto& instance : pModel->visibleInstances[flag])
+			if (psoType == PSOTYPE::WIREFRAME)
+				continue;
+
+
+			for (auto& instance : pModel->visibleInstances[psoType])
 			{
 				HInstance* pHInstance = instance;
 
@@ -1824,14 +1814,19 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 				0xFF,																	//InstanceMask :8
 																						//TraceRay()실행 시 특정 인스턴스를 분리하는데 쓰인다. TraceRay()에서
 																						//전달한 마스크와 해당 인스턴스 마스크의 일치 비트가 있을 경우 해당 인스턴스는
-																						//TraceRay()에서 식별가능(Visible)하다
-				0,																		//InstanceContributionToHitGroupIndex : 24
+				0,																        //InstanceContributionToHitGroupIndex : 24
 																						//인스턴스의 히트쉐이더 인덱스 추가값을 설정한다. 인스턴스 ID와 마찬가지로,
 																						//히트쉐이더를 로드할 때 인스턴스당 쉐이더를 분리하는데 쓰인다.
 				D3D12_RAYTRACING_INSTANCE_FLAG_NONE,									//Flags : 8
 																						//추가 옵션, 대부분의 경우 NONE
 				pModel->bottomLevelAccelerationStructureBuffer->GetGPUVirtualAddress()	//AccelerationStructure
 				};
+
+
+				if (psoType == PSOTYPE::COLORCHIP)
+				{
+					rtInstance.InstanceContributionToHitGroupIndex = 1;
+				}
 
 				if (pModel->rawData.boneCount != 0)
 				{
@@ -1854,7 +1849,9 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 			instanceDescs.data(),
 			instanceDescs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
 
-		m_pRaytracingInstanceDescs[currentFrame].Reset(graphicResourceCB);
+		//m_pRaytracingInstanceDescs[currentFrame].Reset(graphicResourceCB);
+		m_pRaytracingInstanceDescs.Reset(graphicResourceCB);
+
 	}
 
 	//레이트레이싱 인스턴스 입력 정보를 작성
@@ -1866,7 +1863,7 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 		inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 		inputs.NumDescs = instanceDescs.size();
 		inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-		inputs.InstanceDescs = m_pRaytracingInstanceDescs[currentFrame].GpuAddress();
+		inputs.InstanceDescs = m_pRaytracingInstanceDescs.GpuAddress();
 	}
 
 	//가속화 구조체의 필요 크기를 조회
@@ -1879,7 +1876,18 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 	CD3DX12_RESOURCE_DESC resultResourceDesc =
 		CD3DX12_RESOURCE_DESC::Buffer(prebuild.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-	device->CreateCommittedResource(&defaultHeapProp,
+	HBufferManager* pBufferManager = HBufferManager::GetInstance();
+
+	pBufferManager->CreateDefaultHeapBuffer_device5(device,
+		scratchResourceDesc, D3D12_RESOURCE_STATE_COMMON,
+		m_pTopLevelAccelerationStructureScratches);
+
+	pBufferManager->CreateDefaultHeapBuffer_device5(device,
+		resultResourceDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+		m_pTopLevelAccelerationStructures);
+
+
+	/*device->CreateCommittedResource(&defaultHeapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&scratchResourceDesc,
 		D3D12_RESOURCE_STATE_COMMON,
@@ -1891,13 +1899,20 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 		&resultResourceDesc,
 		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
 		nullptr,
-		IID_PPV_ARGS(m_pTopLevelAccelerationStructures[currentFrame].ReleaseAndGetAddressOf()));
+		IID_PPV_ARGS(m_pTopLevelAccelerationStructures[currentFrame].ReleaseAndGetAddressOf()));*/
+
+
 
 	//CommandList 인터페이스를 이용해서 가속화 구조체를 작성
+
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc{};
-	buildDesc.DestAccelerationStructureData = m_pTopLevelAccelerationStructures[currentFrame]->GetGPUVirtualAddress();
+	//buildDesc.DestAccelerationStructureData = m_pTopLevelAccelerationStructures[currentFrame]->GetGPUVirtualAddress();
+	buildDesc.DestAccelerationStructureData = m_pTopLevelAccelerationStructures->GetGPUVirtualAddress();
+
 	buildDesc.Inputs = inputs;
-	buildDesc.ScratchAccelerationStructureData = m_pTopLevelAccelerationStructureScratches[currentFrame]->GetGPUVirtualAddress();
+	//buildDesc.ScratchAccelerationStructureData = m_pTopLevelAccelerationStructureScratches[currentFrame]->GetGPUVirtualAddress();
+	buildDesc.ScratchAccelerationStructureData = m_pTopLevelAccelerationStructureScratches->GetGPUVirtualAddress();
+
 
 	cmdList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
 
@@ -1906,7 +1921,9 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 	// immediately afterwards, without executing the command list
 	D3D12_RESOURCE_BARRIER uavBarrier;
 	uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-	uavBarrier.UAV.pResource = m_pTopLevelAccelerationStructures[currentFrame].Get();
+	//uavBarrier.UAV.pResource = m_pTopLevelAccelerationStructures[currentFrame].Get();
+	uavBarrier.UAV.pResource = m_pTopLevelAccelerationStructures.Get();
+
 	uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	cmdList->ResourceBarrier(1, &uavBarrier);
 }
@@ -1931,7 +1948,7 @@ void HModelManager::CreateComputeRootSignature()
 {
 	HRESULT hr = S_OK;
 
-	CD3DX12_ROOT_PARAMETER rootParameters[(UINT)RootSig_Compute::MaxCount];
+	CD3DX12_ROOT_PARAMETER rootParameters[(UINT)RootSig_Compute::TotalCount];
 	rootParameters[(UINT)RootSig_Compute::StructuredBuffer_VertexOutput].InitAsUnorderedAccessView(0);
 	rootParameters[(UINT)RootSig_Compute::StructuredBuffer_VertexInput].InitAsShaderResourceView(0);
 	rootParameters[(UINT)RootSig_Compute::StructuredBuffer_BoneTM].InitAsShaderResourceView(1, 1);

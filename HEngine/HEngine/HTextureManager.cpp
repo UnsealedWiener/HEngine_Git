@@ -17,6 +17,9 @@ void HTextureManager::Initialize(ID3D12Device* device)
 	m_skyboxDescriptorHeap = std::make_unique<DirectX::DescriptorHeap>(device,
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		SKYBOXMAP_COUNT);
+	m_colorChipDescriptorHeap = std::make_unique<DirectX::DescriptorHeap>(device,
+		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+		COLORCHIP_TEXTURECOUNT);
 	m_spriteDescriptorHeap = std::make_unique<DirectX::DescriptorHeap>(device,
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		MAX_SPRITE_DESCRIPTORHEAP_SIZE);
@@ -50,7 +53,62 @@ void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox
 	m_bRaytracingDirty = true;
 }
 
-HMaterialData* HTextureManager::CreateMaterial(ResourceUploadBatch& batch, const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height)
+void HTextureManager::LoadColorChip(ResourceUploadBatch& batch, const WCHAR* baseColor, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* emissive)
+{
+	auto device = DX::DeviceResources::GetInstance()->GetD3DDevice();
+
+	HRESULT hr;
+
+	hr = DirectX::CreateDDSTextureFromFile(device,
+		batch, baseColor, m_baseColor.ReleaseAndGetAddressOf());
+	if (hr == E_FAIL)
+		DirectX::CreateWICTextureFromFile(device, batch, baseColor, m_baseColor.ReleaseAndGetAddressOf(), true);
+
+	hr = DirectX::CreateDDSTextureFromFile(device,
+		batch, roughness, m_roughness.ReleaseAndGetAddressOf());
+	if (hr == E_FAIL)
+		DirectX::CreateWICTextureFromFile(device, batch, roughness, m_roughness.ReleaseAndGetAddressOf(), true);
+
+	hr = DirectX::CreateDDSTextureFromFile(device,
+		batch, metallic, m_metallic.ReleaseAndGetAddressOf());
+	if (hr == E_FAIL)
+		DirectX::CreateWICTextureFromFile(device, batch, metallic, m_metallic.ReleaseAndGetAddressOf(), true);
+
+	hr = DirectX::CreateDDSTextureFromFile(device,
+		batch, emissive, m_emissive.ReleaseAndGetAddressOf());
+	if (hr == E_FAIL)
+		DirectX::CreateWICTextureFromFile(device, batch, emissive, m_emissive.ReleaseAndGetAddressOf(), true);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = m_baseColor->GetDesc().Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = m_baseColor->GetDesc().MipLevels;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+	device->CreateShaderResourceView(m_baseColor.Get(), &srvDesc, m_colorChipDescriptorHeap->GetCpuHandle(0));
+
+	srvDesc.Format = m_roughness->GetDesc().Format;
+	srvDesc.Texture2D.MipLevels = m_roughness->GetDesc().MipLevels;
+
+	device->CreateShaderResourceView(m_roughness.Get(), &srvDesc, m_colorChipDescriptorHeap->GetCpuHandle(1));
+
+	srvDesc.Format = m_metallic->GetDesc().Format;
+	srvDesc.Texture2D.MipLevels = m_metallic->GetDesc().MipLevels;
+
+	device->CreateShaderResourceView(m_metallic.Get(), &srvDesc, m_colorChipDescriptorHeap->GetCpuHandle(2));
+
+	srvDesc.Format = m_emissive->GetDesc().Format;
+	srvDesc.Texture2D.MipLevels = m_emissive->GetDesc().MipLevels;
+
+	device->CreateShaderResourceView(m_emissive.Get(), &srvDesc, m_colorChipDescriptorHeap->GetCpuHandle(3));
+
+	m_bRasterizeDirty = true;
+	m_bRaytracingDirty = true;
+}
+
+HMaterialData* HTextureManager::CreateMaterial(ResourceUploadBatch& batch, const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height, const WCHAR* emissive)
 {
 	auto device = DX::DeviceResources::GetInstance()->GetD3DDevice();
 
@@ -95,13 +153,19 @@ HMaterialData* HTextureManager::CreateMaterial(ResourceUploadBatch& batch, const
 		if (hr == E_FAIL)
 			DirectX::CreateWICTextureFromFile(device, batch, height, hMaterial->m_height.ReleaseAndGetAddressOf(), true);
 	}
+	if (emissive != nullptr)
+	{
+		hr = DirectX::CreateDDSTextureFromFile(device, batch, emissive, hMaterial->m_emissive.ReleaseAndGetAddressOf(), true);
+		if (hr == E_FAIL)
+			DirectX::CreateWICTextureFromFile(device, batch, emissive, hMaterial->m_emissive.ReleaseAndGetAddressOf(), true);
+	}
 
 	CreateSRVs_material(device, hMaterial.get());
 
 
 	HMaterialData* ptr = reinterpret_cast<HMaterialData*>(hMaterial.get());
 
-	hMaterial->managerController = HManagerController(this, &m_materialList, ptr);
+	hMaterial->managerController = HManagerController_map(this, &m_materialList, ptr);
 	hMaterial->managerController.SetAfterDeleteProcess(&HTextureManager::AfterDeleteProcess_material);
 
 	m_materialList[ptr] = std::move(hMaterial);
@@ -132,7 +196,7 @@ HSpriteData* HTextureManager::CreateSprite(ResourceUploadBatch& batch, const WCH
 
 	HSpriteData* ptr = reinterpret_cast<HSpriteData*>(hSprite.get());
 
-	hSprite->managerController = HManagerController(this, &m_spriteList, ptr);
+	hSprite->managerController = HManagerController_map(this, &m_spriteList, ptr);
 	hSprite->managerController.SetAfterDeleteProcess(&HTextureManager::AfterDeleteProcess_sprite);
 
 	m_spriteList[ptr] = std::move(hSprite);
@@ -208,6 +272,11 @@ void HTextureManager::CreateSRVs_material(ID3D12Device* device, HMaterial* mater
 		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
 	else
 		CreateSRV(device, material->m_height.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
+
+	if (material->m_emissive == nullptr)
+		CreateNullDescriptor(device, m_materialDescriptorHeap->GetCpuHandle(m_materialOffset++));
+	else
+		CreateSRV(device, material->m_emissive.Get(), m_materialDescriptorHeap.get(), m_materialOffset++);
 }
 
 void HTextureManager::CreateSRV(ID3D12Device* device, ID3D12Resource* pResouce,

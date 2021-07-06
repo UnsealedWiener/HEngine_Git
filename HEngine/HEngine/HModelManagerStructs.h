@@ -1,11 +1,12 @@
 #pragma once
 #include"EngineInterface.h"
 #include"HManagerController.h"
+#include"HRasterizeDefines.h"
 using namespace DX;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using namespace Microsoft::WRL;
-
+using namespace HRasterizeDefines;
 
 struct HVertex_raytracing
 {
@@ -34,10 +35,11 @@ struct HModel : public HModelData
 	UINT					    indexOffsetInEntireBuffer;
 
 	//instances data
-	std::unordered_map<unsigned char, std::unordered_map<void*, std::shared_ptr<HInstance>>> instances;
-	std::unordered_map<unsigned char, std::vector<HInstance*>> visibleInstances;
+	std::unordered_map<PSOTYPE, std::unordered_map<void*, std::shared_ptr<HInstance>>> instances;
+	std::unordered_map<PSOTYPE, std::vector<HInstance*>> visibleInstances;
+
+	//UINT instancesCount = 0;
 	UINT visibleInstanceCount = 0;
-	UINT visibleInstanceCount_temp = 0;
 
 	//raytracing pipeline resources
 	//Used for static model(no animation)
@@ -49,8 +51,11 @@ struct HModel : public HModelData
 
 	//rasterize pipeline resources
 	SharedGraphicsResource perModelCB;
-	std::unordered_map<unsigned char, SharedGraphicsResource> structuredBuffer_perPso;
-	std::unordered_map<unsigned char, SharedGraphicsResource> structuredBuffer_instances;
+	std::unordered_map<PSOTYPE, SharedGraphicsResource> structuredBuffer_perPso;
+	std::unordered_map<PSOTYPE, SharedGraphicsResource> structuredBuffer_instances;
+	//std::unordered_map<PSOTYPE, SharedGraphicsResource> structuredBuffer_instances_all;
+
+
 	//std::unordered_map<unsigned char, SharedGraphicsResource> structuredBuffer_bones;
 
 	//working(for compute shader)
@@ -58,9 +63,9 @@ struct HModel : public HModelData
 	SharedGraphicsResource structuredBuffer_computeShader_model;
 
 
-	HManagerController<HModelManager, std::unordered_map<void*, std::shared_ptr<HModel>>> managerController;
+	HManagerController_map<HModelManager, std::unordered_map<void*, std::shared_ptr<HModel>>> managerController;
 	void Delete()override;
-	HInstanceData* AddInstance(unsigned char flag)override;
+	HInstanceData* AddInstance(ShaderType type)override;
 	void SetAnimation(HAnimData* pAnimData)override;
 	HAnimData* GetAnimation()override;
 
@@ -69,7 +74,7 @@ struct HModel : public HModelData
 struct HAnim : public HAnimData
 {
 	HAnimRawData rawData;
-	HManagerController < HModelManager, std::unordered_map<void*, std::shared_ptr<HAnim>>> managerController;
+	HManagerController_map < HModelManager, std::unordered_map<void*, std::shared_ptr<HAnim>>> managerController;
 
 	void Delete()override;
 };
@@ -78,7 +83,7 @@ struct HAnim : public HAnimData
 
 struct HInstance : public HInstanceData
 {
-	unsigned char m_flag;					//InstanceType
+	PSOTYPE m_psoType;					//InstanceType
 
 	std::weak_ptr<HModel> pModel;
 	std::weak_ptr<UINT> pMat;
@@ -93,10 +98,10 @@ struct HInstance : public HInstanceData
 	ComPtr<ID3D12Resource> bottomLevelAccelerationStructureBuffer;
 	ComPtr<ID3D12Resource> bottomLevelAccelerationStructureScratchBuffer;
 
-	HManagerController<HModel, std::unordered_map<void*, std::shared_ptr<HInstance>>> managerController;
+	HManagerController_map<HModel, std::unordered_map<void*, std::shared_ptr<HInstance>>> managerController;
 	void Delete()override;
 	void SetMaterial(HMaterialData* pMaterial, unsigned int slot)override;
-	void SetShaderFlag(unsigned char flag)override;
+	void SetShaderFlag(ShaderType type)override;
 	Matrix GetBoneTMAtCurruntFrame(std::string boneName)override;
 
 };
@@ -155,14 +160,14 @@ struct HSturecturedBuffer_Raytracing_PerNode
 	UINT padding[2];
 };
 
-enum InstanceType
-{
-	NOOPTION_MM =	0B00000000,
-	TWOMAT_MM	=	0B00000001,
-	TESS_MM		=	0B00000010,
-	WIREFRAME_MM = 0B00000100,
-	ALLOPTION_MM   = TWOMAT_MM| TESS_MM | WIREFRAME_MM
-};
+//enum InstanceType
+//{
+//	NOOPTION_MM =	0B00000000,
+//	TWOMAT_MM	=	0B00000001,
+//	TESS_MM		=	0B00000010,
+//	WIREFRAME_MM = 0B00000100,
+//	ALLOPTION_MM   = TWOMAT_MM| TESS_MM | WIREFRAME_MM
+//};
 
 enum class RootSig_Compute
 {
@@ -170,7 +175,7 @@ enum class RootSig_Compute
 	StructuredBuffer_VertexOutput,
 	StructuredBuffer_BoneTM,
 	Constant_PerModel,
-	MaxCount
+	TotalCount
 };
 
 struct HStructuredBuffer_Raytracing_ComputeShader_PerModel

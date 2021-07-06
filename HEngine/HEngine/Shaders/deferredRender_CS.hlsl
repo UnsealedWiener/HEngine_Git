@@ -37,7 +37,9 @@ StructuredBuffer<Light> gLights : register(t0, space1);
 //};
 
 
-RWTexture2D<float4> resultBuffer : register(u0);
+RWTexture2D<float4> resultBuffer0 : register(u0);
+//RWTexture2D<float4> resultBuffer1 : register(u1);
+
 
 //0 = albedo
 //1 = metallicRoughnessAo
@@ -46,10 +48,11 @@ RWTexture2D<float4> resultBuffer : register(u0);
 Texture2D albedoTexture:    register(t0);
 Texture2D metallicRoughnessAOTexture:    register(t1);
 Texture2D worldNormalTexture:    register(t2);
-Texture2D depthTexture:    register(t3);
-Texture2D reflectionTexture:    register(t4);
-Texture2D shadowTexture:    register(t5);
-Texture2D ssaoTexture:    register(t6);
+Texture2D emissiveTexture:    register(t3);
+Texture2D depthTexture:    register(t4);
+Texture2D reflectionTexture:    register(t5);
+Texture2D shadowTexture:    register(t6);
+Texture2D ssaoTexture:    register(t7);
 
 
 SamplerComparisonState gsamShadow : register(s6);
@@ -70,6 +73,7 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 	float metallic = metallicRoughnessAOTexture[dispatchThreadID.xy].x;
 	float roughness = metallicRoughnessAOTexture[dispatchThreadID.xy].y;
 	float ao = metallicRoughnessAOTexture[dispatchThreadID.xy].z;
+	float3 emissive = emissiveTexture[dispatchThreadID.xy];
 	float3 normal = float3(worldNormalTexture[dispatchThreadID.xy].xyz);
 	float depth = depthTexture[dispatchThreadID.xy].x;
 	float3 reflect = float3(reflectionTexture[dispatchThreadID.xy].xyz);
@@ -77,7 +81,7 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 
 	ao = min(ao, ssao);
 
-	float3 color = {0,0,0};
+	float3 color = { 0,0,0 };
 	if (depth < 1.f)
 	{
 		float4 ndcCoord = { 2 * (dispatchThreadID.x / scene.renderTargetSize.x) - 1, 1 - 2 * (dispatchThreadID.y / scene.renderTargetSize.y), depth, 1 };
@@ -104,18 +108,22 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 
 		float3 directLighting = 0.0f;
 		int lightIndex = 0;
-		for (int i = 0; i < scene.dirLightCnt ; i++, lightIndex++)
+		for (int i = 0; i < scene.dirLightCnt; i++, lightIndex++)
 		{
+			float3 lightStrength = abs(gLights[lightIndex].strength);
+
 			directLighting += DirLightCalculation(gLights[lightIndex].direction,
-				gLights[lightIndex].strength, Lo, normal, cosLo, F0, albedo, metallic,
+				lightStrength, Lo, normal, cosLo, F0, albedo, metallic,
 				roughness, isShadowOn);
 		}
 
 		float3 pointLighting = 0.0f;
 		for (uint i = 0; i < scene.pointLightCnt; i++, lightIndex++)
 		{
+			float3 lightStrength = abs(gLights[lightIndex].strength);
+
 			pointLighting += PointLightCalculation(gLights[lightIndex].position,
-				gLights[lightIndex].strength, gLights[lightIndex].falloffStart,
+				lightStrength, gLights[lightIndex].falloffStart,
 				gLights[lightIndex].falloffEnd, worldCoord.xyz,
 				Lo, normal, cosLo, F0, albedo, metallic, roughness);
 		}
@@ -124,8 +132,11 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 
 		for (uint i = 0; i < scene.spotLightCnt; i++, lightIndex++)
 		{
+
+			float3 lightStrength = abs(gLights[lightIndex].strength);
+
 			spotLighting += SpotLightCalculation(gLights[lightIndex].position,
-				gLights[lightIndex].direction, gLights[lightIndex].strength,
+				gLights[lightIndex].direction, lightStrength,
 				gLights[lightIndex].falloffStart, gLights[lightIndex].falloffEnd,
 				gLights[lightIndex].spotPower, worldCoord.xyz,
 				Lo, normal, cosLo, F0, albedo, metallic, roughness);
@@ -161,9 +172,9 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 
 		}
 
-		float3 Ambient = float3(1.f, 1.f, 1.f) * indirectLighting *ao;
+		float3 Ambient = float3(0.2f, 0.2f, 0.2f) * indirectLighting * ao;
 
-		color = directLighting + pointLighting+ spotLighting+  Ambient;
+		color = directLighting + pointLighting + spotLighting + Ambient;
 
 		//color = directLighting;
 
@@ -182,23 +193,19 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 			color = reflect.xyz;
 	}
 
-
+	color += emissive;
 	//float Gamma = 1.0f / 2.2f;
 	//color = color / (color + float3(1.0f, 1.0f, 1.0f));
 	//color = pow(color, float3(Gamma, Gamma, Gamma));
 
 	//float tempshadow = float(shadowTexture[dispatchThreadID.xy].x);
 
+	float4 finalResult = float4(GammaCorrection(color), 1);
 
-	resultBuffer[dispatchThreadID.xy] = float4(GammaCorrection(color),1);
-	//resultBuffer[dispatchThreadID.xy] = float4(normal, 1);
+	if (isnan(finalResult).x)
+		finalResult = 0.f;
 
-	//resultBuffer[dispatchThreadID.xy] = float4(tempshadow, tempshadow, tempshadow,1);
-	//resultBuffer[dispatchThreadID.xy] = float4(ao, ao, ao,1);
-	//resultBuffer[dispatchThreadID.xy] = float4(reflect.xyz, 1);
-	//resultBuffer[dispatchThreadID.xy] = float4(color.xyz, 1);
-
-
+	resultBuffer0[dispatchThreadID.xy] = finalResult;
 }
 
 

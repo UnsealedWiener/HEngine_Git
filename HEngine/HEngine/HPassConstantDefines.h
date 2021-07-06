@@ -19,7 +19,7 @@ struct HLight : public HLightData
 	//Vector3 position = { 0.0f, 0.0f, 0.0f };			// point/spot light only
 	//float spotPower = 64.0f;                            // spot light only
 	LightType lightType;
-	HManagerController<HPassConstant, std::unordered_map<void*, std::unique_ptr<HLight>>> managerController;
+	HManagerController_map<HPassConstant, std::unordered_map<void*, std::unique_ptr<HLight>>> managerController;
 	void Delete()override;
 
 };

@@ -1,5 +1,5 @@
 #pragma once
-
+#include<memory>
 #include<unordered_map>
 
 using namespace DirectX;
@@ -68,6 +68,7 @@ struct HBoneAnim
 struct HBoneAnims
 {
 	float totalTime;
+	Matrix AxisSystempModify;
 	std::vector<HBoneAnim> boneAnim;
 };
 

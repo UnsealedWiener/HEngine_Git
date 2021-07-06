@@ -33,10 +33,10 @@ public:
 	void Initialize(DeviceResources* pDeviceResources, HPassConstant* pPassConstant);
 	void CreateDeviceDependentResources();
 
-	void CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo,
-		ID3D12Resource* pNormal, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow,
+	void CreateDescriptors (ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo,
+		ID3D12Resource* pNormal, ID3D12Resource* pEmissive, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow,
 		ID3D12Resource* pRandomVector, ID3D12Resource* pSSAO,
-		ID3D12Resource* pResult);
+		ID3D12Resource* pScene);
 
 
 
@@ -53,7 +53,7 @@ private:
 
 
 	void CreateDesciptors_lightCalculation(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo,
-		ID3D12Resource* pNormal, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow,
+		ID3D12Resource* pNormal, ID3D12Resource* pEmissive, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow,
 		ID3D12Resource* pSSAO, ID3D12Resource* pResult);
 
 	void CreateDesciptors_ssao(ID3D12Resource* pDepth, ID3D12Resource* pNormal, ID3D12Resource* pRandomVector,

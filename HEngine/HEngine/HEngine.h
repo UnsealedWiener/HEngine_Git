@@ -10,6 +10,7 @@
 #include"HGraphicPipeline.h"
 #include"HPicking.h"
 #include"HBufferManager.h"
+#include"HWaveEffect.h"
 
 class HEngine final : public DX::IDeviceNotify
 {
@@ -44,7 +45,6 @@ public:
 	void OnSuspending();
 	void OnResuming();
 	void OnWindowSizeChanged(int width, int height);
-	void NewAudioDevice();
 
 	// Properties
 	void GetDefaultSize(int& width, int& height) const;
@@ -64,34 +64,18 @@ private:
 	HBufferManager*									m_pHBufferManager;
 	DX::StepTimer									m_timer;
 
+	// DirectXTK objects.
+	//그래픽메모리의 전반을 관리하는 객체(싱글턴)
+	std::unique_ptr<DirectX::GraphicsMemory>        m_graphicsMemory;
+	std::unique_ptr<DirectX::ResourceUploadBatch>	m_resourceUploadBatch;
+
 	void Update(DX::StepTimer const& timer);
 	void Render();
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
 	
-	// Input devices.
 	std::unique_ptr<DirectX::GamePad>				m_gamePad;
-	std::unique_ptr<DirectX::Keyboard>				m_keyboard;
-	std::unique_ptr<DirectX::Mouse>					m_mouse;
 	DirectX::GamePad::ButtonStateTracker			m_gamePadButtons;
-	DirectX::Keyboard::KeyboardStateTracker			m_keyboardButtons;
-	DirectX::Mouse::ButtonStateTracker				m_mouseButtons;
-	
-	// DirectXTK objects.
-	//그래픽메모리의 전반을 관리하는 객체(싱글턴)
-	std::unique_ptr<DirectX::GraphicsMemory>        m_graphicsMemory;
-	std::unique_ptr<DirectX::ResourceUploadBatch>	m_resourceUploadBatch;
-	//오디오 엔진
-	std::unique_ptr<DirectX::AudioEngine>           m_audEngine;
-	std::unique_ptr<DirectX::WaveBank>              m_waveBank;
-	std::unique_ptr<DirectX::SoundEffect>           m_soundEffect;
-	std::unique_ptr<DirectX::SoundEffectInstance>   m_effect1;
-	std::unique_ptr<DirectX::SoundEffectInstance>   m_effect2;
-	
-	uint32_t                                        m_audioEvent;
-	float                                           m_audioTimerAcc;
-	bool                                            m_retryDefault;
-
 
 	HTextureManager* m_textureManager;
 	
@@ -103,20 +87,22 @@ private:
 	public:
 		void StartSetting();
 		void FinishSetting();
+		void WaitGPU();
 		float GetElapsedTime();
 		void SetCamera(Camera camera);
 		Camera* GetCamera();
-		DirectX::Keyboard* GetKeyboard();
-		DirectX::GamePad* GetGamePad();
-		DirectX::Mouse* GetMouse();
+		//DirectX::Keyboard* GetKeyboard();
+		//DirectX::GamePad* GetGamePad();
+		//DirectX::Mouse* GetMouse();
 		void AddDebugString(DebugString debugString);
 		HInstanceData* Picking(unsigned int pickX, unsigned int pickY);
+		float GetOrthoCameraPickingDepth(int screenX, int screenY);
 		void ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		HProceduralGeometry_line* CreateLine(unsigned char flag);
 		HProceduralGeometry_rect* CreateRect(unsigned char flag);
 		HSimplePrimitive* CreateBox(Vector3 Size, unsigned char flag);
 		HMaterialData* CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic,
-			const WCHAR* ao, const WCHAR* normal, const WCHAR* height);
+			const WCHAR* ao, const WCHAR* normal, const WCHAR* height, const WCHAR* emissive);
 		HSpriteData* CreateSprite(const WCHAR* spriteFile);
 		HModelData* CreateModelFromFbxFile(std::string fbxfile);
 		HAnimData* CreateAnimationFromFbxFiles(std::vector<std::string> fbxNames);
@@ -124,12 +110,16 @@ private:
 		HAnimData* CreateAnimationFromHAnimFiles(std::vector<std::string> fbxNames);
 		HLightData* CreateLight(LightType lightType);
 		HUIData* CreateUI();
+		HWaveData* CreateWave(int m, int n, float dx, float speed, float damping);
 		void LoadSkyBox(const WCHAR* skyboxDDSFile);
+		void LoadColorChip(const WCHAR* baseColor, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* emissive);
 		void LoadFont(const WCHAR* spriteFontFile);
 		void SetReflectionEffect(bool bOnOff);
 		void SetShadowEffect(bool bOnOff);
 		void SetSSAO(bool bOnOff);
 		void SetWireFrame(bool bOnOff);
+		void SetDOF(bool bOnOff);
+		void SetDOFParams(float focusDepth, float maxBlurDepthGap);
 		RECT GetClientRectFromEngine();
 };
 

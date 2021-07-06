@@ -135,12 +135,14 @@ void HSimplePrimitiveManager::Draw(ID3D12GraphicsCommandList* commandList)
 	auto dsv = m_pDeviceResources->GetDepthStencilView();
 	commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-	m_primitivebatch->Begin(commandList);
+	
 
 	for (pair<const unsigned char, unordered_map<void*, unique_ptr<HProceduralGeometry_line_HEngine>>>& lines : m_lines)
 	{
 		if (lines.second.size() == 0)
 			continue;
+
+		m_primitivebatch->Begin(commandList);
 
 		m_lineEffect[lines.first]->Apply(commandList);
 
@@ -150,15 +152,18 @@ void HSimplePrimitiveManager::Draw(ID3D12GraphicsCommandList* commandList)
 				VertexPositionColor(XMVECTOR(line.second->dots[0]), XMVECTOR(line.second->color)),
 				VertexPositionColor(XMVECTOR(line.second->dots[1]), XMVECTOR(line.second->color)));
 		}
+		m_primitivebatch->End();
 	}
 
-	m_primitivebatch->End();
+	
 
-	m_primitivebatch->Begin(commandList);
+	
 	for (pair<const unsigned char, unordered_map<void*, unique_ptr<HProceduralGeometry_rect_HEngine>>>& rects : m_rects)
 	{
 		if (rects.second.size() == 0)
 			continue;
+
+		m_primitivebatch->Begin(commandList);
 
 		m_rectEffect[rects.first]->Apply(commandList);
 
@@ -170,9 +175,10 @@ void HSimplePrimitiveManager::Draw(ID3D12GraphicsCommandList* commandList)
 				VertexPositionColor(XMVECTOR(rect.second->dots[2]), XMVECTOR(rect.second->color)), 
 				VertexPositionColor(XMVECTOR(rect.second->dots[3]), XMVECTOR(rect.second->color)));
 		}
+		m_primitivebatch->End();
 	}
 
-	m_primitivebatch->End();
+	
 
 	for (pair<const unsigned char, unordered_map<void* ,unique_ptr<HSimplePrimitive_HEngine>>>& primitives : m_simplePrimitives)
 	{
@@ -199,7 +205,7 @@ HProceduralGeometry_line* HSimplePrimitiveManager::CreateLine(unsigned char flag
 
 	HProceduralGeometry_line* ptr = pLine.get();
 
-	pLine->managerController = HManagerController(this, &m_lines[flag], ptr);
+	pLine->managerController = HManagerController_map(this, &m_lines[flag], ptr);
 
 	m_lines[flag][ptr] = move(pLine);
 
@@ -212,7 +218,7 @@ HProceduralGeometry_rect* HSimplePrimitiveManager::CreateRect(unsigned char flag
 
 	HProceduralGeometry_rect* ptr = pRect.get();
 
-	pRect->managerController = HManagerController(this, &m_rects[flag], ptr);
+	pRect->managerController = HManagerController_map(this, &m_rects[flag], ptr);
 
 	m_rects[flag][ptr] = move(pRect);
 
@@ -230,7 +236,7 @@ HSimplePrimitive* HSimplePrimitiveManager::CreateBox(Vector3 Size, unsigned char
 
 	HSimplePrimitive* ptr = pBox.get();
 
-	pBox->managerController = HManagerController(this, &m_simplePrimitives[flag], ptr);
+	pBox->managerController = HManagerController_map(this, &m_simplePrimitives[flag], ptr);
 
 	m_simplePrimitives[flag][ptr] = move(pBox);
 

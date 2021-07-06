@@ -4,12 +4,16 @@
 #include<string>
 #include<vector>
 #include"Camera.h"
-#include"GamePad.h"
-#include"Keyboard.h"
-#include"Mouse.h"
 #include"HModelRawData.h"
 
 using namespace DirectX;
+
+enum class ShaderType
+{
+	DEFAULT,
+	COLORCHIP,
+	WIREFRAME,
+};
 
 struct HandleInterface
 {
@@ -60,16 +64,16 @@ struct HUIData : public HandleInterface
 	height = 0 ~ 1
 	*/
 	Vector3 leftTopPosition;
-	float width;
-	float height;
+	Vector2 size;
+	//float width;
+	//float height;
 	bool bIsAbsolutePosition = true;
 	
 	float opacity = 1.f; // 0 ~ 1
 
-
-
 	virtual void Delete() = 0;
 	virtual void SetSprite(HSpriteData* pSprite) = 0;
+	virtual void SetDrawOnOff(bool onOff) = 0;
 };
 
 struct HInstanceData : public HandleInterface
@@ -86,13 +90,13 @@ struct HInstanceData : public HandleInterface
 	float animationLerpValue = 0;	//if this value is 0, first animation value is 100%
 
 	virtual void Delete() = 0;
-	virtual void SetMaterial(HMaterialData* pMaterial, unsigned int slot) = 0;
+	virtual void SetMaterial(HMaterialData* pMaterial, unsigned int slot = 0) = 0;
 		/**
 	 * Change Shader flag.
 	 *
 	 * \param flag ShaderType
 	 */
-	virtual void SetShaderFlag(unsigned char flag) = 0;
+	virtual void SetShaderFlag(ShaderType type) = 0;
 	virtual Matrix GetBoneTMAtCurruntFrame(std::string boneName) = 0;
 	virtual ~HInstanceData() {}
 };
@@ -115,17 +119,26 @@ struct HModelData : public HandleInterface
 	* 
 	* \return HInstanceData ptr
 	*/
-	virtual HInstanceData* AddInstance(unsigned char flag) = 0;
+	virtual HInstanceData* AddInstance(ShaderType type) = 0;
 	virtual void SetAnimation(HAnimData* pAnimData) = 0;
 	virtual HAnimData* GetAnimation() = 0;
 	virtual ~HModelData() {}
 };
 
+class HWaveData : public HandleInterface
+{
+public:
+	Matrix worldTM;
+	virtual void Delete() = 0;
+};
+
 struct DebugString
 {
 	std::string message;
-	Color color;
-	int posX, posY;
+	Color color = Color(0,0,0);
+	Vector3 pos;
+	Vector2 size = Vector2(1,1);
+	bool bIsAbsolutePosition = true;
 };
 
 enum LightType
@@ -147,13 +160,7 @@ struct HLightData : public HandleInterface
 	virtual void Delete() = 0;
 };
 
-enum ShaderType
-{
-	eNoOption_EI = 0B00000000,
-	eMaterialTransform_EI = 0B00000001,
-	eTesselation_EI = 0B00000010,
-	eWireFrame_EI = 0B00000100
-};
+
 
 enum ShaderType_Primitive
 {
@@ -162,8 +169,6 @@ enum ShaderType_Primitive
 	eWireFrame_Primitive = 0B00000010,
 	eAllOption_Primitive = eDepthOff_Primitive | eWireFrame_Primitive
 };
-
-
 
 class HEngine;
 class HEngine_DX12_3D
@@ -230,8 +235,8 @@ public:
 	* When you try to make objects which are usually made during initializtion like
 	* model or material, you need to call this function before & after.
 	* In engine, there is a object called 'resource upload batch', which saves commands
-	* to make gpu resources. It saves all the commands between StartSetting() and FinishSetting()
-	* submits the commands to gpu at FinishSetting().
+	* to make gpu resources. It saves all the commands between StartSetting() and FinishSetting() 
+	* and submits the commands to gpu at FinishSetting().
 	*/
 	//----------------------------------------------------------------------------
 
@@ -248,6 +253,18 @@ public:
 	 * Submit commands to gpu for resource creation.
 	 */
 	void FinishSetting();
+
+	//**list of functions that should be called between  StartSetting() and FinishSetting()
+	/*
+	* CreateModelFromFbxFile
+	* CreateAnimationFromFbxFiles
+	* CreateModelFromHModelFile
+	* CreateAnimationFromHAnimFiles
+	* CreateMaterial
+	* CreateSprite
+	* LoadSkyBox
+	* LoadFont
+	*/
 
 	//----------------------------------------------------------------------------
 	/* Resource Loading Functions.
@@ -277,8 +294,6 @@ public:
 	HModelData* CreateModelFromHModelFile(std::string fbxfile);
 	HAnimData* CreateAnimationFromHAnimFiles(std::vector<std::string> fbxNames);
 
-
-
 	/**
 	 * Load textrue resource and make a material set.
 	 *
@@ -295,7 +310,7 @@ public:
 	 * \return material handle
 	 */
 	HMaterialData* CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic,
-		const WCHAR* ao, const WCHAR* normal, const WCHAR* height);
+		const WCHAR* ao, const WCHAR* normal, const WCHAR* height, const WCHAR* emissive);
 
 	HSpriteData* CreateSprite(const WCHAR* spriteFile);
 	
@@ -304,30 +319,51 @@ public:
 	*/  
 	//----------------------------------------------------------------------------
 
+	//get delta time
 	float GetElapsedTime();
+
+	//get set camera
 	void SetCamera(Camera camera);
 	Camera* GetCamera();
-	DirectX::Keyboard* GetKeyboard();
-	DirectX::GamePad* GetGamePad();
-	DirectX::Mouse* GetMouse();
 
+	//output debug string, must be called everyframe. internaly saved in deque.
 	void AddDebugString(DebugString debugString);
-	HInstanceData* Picking(unsigned int pickX, unsigned int pickY);
 
+	//get pointer of  a model instance. it returns null if none is picked.
+	HInstanceData* Picking(unsigned int pickX, unsigned int pickY);
+	float GetOrthoCameraPickingDepth(int screenX, int screenY);
 	//flag = ShaderType_Primitive
 	HProceduralGeometry_line* CreateLine(unsigned char flag);
 	HProceduralGeometry_rect* CreateRect(unsigned char flag);
 	HSimplePrimitive* CreateBox(Vector3 Size, unsigned char flag);
+
+	//create 2D sprite UI
 	HUIData* CreateUI();
+
+	//create Light
 	HLightData* CreateLight(LightType lightType);
 
+	//default : 128, 128, 1.0f, 0.03f, 4.0f, 0.2f 
+	HWaveData* CreateWave(int m, int n, float dx, float speed, float damping);
+
+	//get client size of the window
 	RECT GetClientRectFromEngine();
 
+	//load default skybox for raytracing reflection
 	void LoadSkyBox(const WCHAR* skyBoxDDSFile);
+
+	//load default color chip for colorchip drawing
+	void LoadColorChip(const WCHAR* baseColor, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* emissive);
+
+
+	//load default font for string output
 	void LoadFont(const WCHAR* spriteFontFile);
 
 	void SetReflectionEffect(bool bOnOff);
 	void SetShadowEffect(bool bOnOff);
 	void SetSSAO(bool bOnOff);
 	void SetWireFrame(bool bOnOff);
+	void SetDOF(bool bOnOff);
+	void SetDOFParams(float focusDepth, float maxBlurDepthGap);
+	void WaitGPU();
 };

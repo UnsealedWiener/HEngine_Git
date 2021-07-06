@@ -55,6 +55,15 @@
     <Filter Include="Source\MainEngine\HGraphicPipeline\HRaytracing">
       <UniqueIdentifier>{65d80d25-f2e1-4b49-b2af-0f675f542cbd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Raytracing">
+      <UniqueIdentifier>{3b4816a9-a5af-4997-a12b-92c7cbac36bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\HPostProcess">
+      <UniqueIdentifier>{efa19d03-7f57-4d43-aab4-c3d694dec135}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\MainEngine\HGraphicPipeline\WaveEffect">
+      <UniqueIdentifier>{33907aaa-9d39-4653-a3b8-ef814ac99652}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -125,6 +134,18 @@
     </ClCompile>
     <ClCompile Include="HRaytracing.cpp">
       <Filter>Source\MainEngine\HGraphicPipeline\HRaytracing</Filter>
+    </ClCompile>
+    <ClCompile Include="HRasterizeDefines.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\HRasterize</Filter>
+    </ClCompile>
+    <ClCompile Include="HWaveEffect.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\WaveEffect</Filter>
+    </ClCompile>
+    <ClCompile Include="HWave.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\WaveEffect</Filter>
+    </ClCompile>
+    <ClCompile Include="HPostProcess.cpp">
+      <Filter>Source\MainEngine\HGraphicPipeline\HPostProcess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -221,11 +242,20 @@
     <ClInclude Include="HRaytracing.h">
       <Filter>Source\MainEngine\HGraphicPipeline\HRaytracing</Filter>
     </ClInclude>
+    <ClInclude Include="HWaveEffect.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\WaveEffect</Filter>
+    </ClInclude>
+    <ClInclude Include="HWave.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\WaveEffect</Filter>
+    </ClInclude>
+    <ClInclude Include="HPostProcess.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HPostProcess</Filter>
+    </ClInclude>
+    <ClInclude Include="HPostProcessDefines.h">
+      <Filter>Source\MainEngine\HGraphicPipeline\HPostProcess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\Raytracing.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\SkinAnim_Raytracing.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -281,6 +311,45 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\RasterizeRootSig.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Raytracing.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\HitGroup0.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Miss.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayGeneration.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Common_raytracing.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\HitGroup1.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\colorChip_PS_deffered.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\wave_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\wave_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\waveRootSig.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DOF_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\horizonBlur_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\verticalBlur_CS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -8,7 +8,7 @@ using namespace DirectX;
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
-HDEVNOTIFY g_hNewAudio = nullptr;
+//HDEVNOTIFY g_hNewAudio = nullptr;
 HEngine* HEngine::m_app = nullptr;
 
 HEngine* HEngine::GetApp()
@@ -48,22 +48,8 @@ HEngine::~HEngine()
 	}
 }
 
-//윈도우 런타임 가동, 글로벌로 선언해야함.
-Microsoft::WRL::Wrappers::RoInitializeWrapper runtimeInit(RO_INIT_MULTITHREADED);
-
 void HEngine::Initialize(HWND hwnd, int width, int height)
 {
-	DX::ThrowIfFailed(HRESULT(runtimeInit));				//런타임가동 체크
-
-	//HWND hwnd = InitWindow(instance, width, height);		//윈도우 생성
-
-	m_gamePad = std::make_unique<GamePad>();				//게임패드 
-
-	m_keyboard = std::make_unique<Keyboard>();				//키보드
-
-	m_mouse = std::make_unique<Mouse>();					//마우스
-	m_mouse->SetWindow(hwnd);
-
 	//해당객체에 윈도우 핸들과 클라이언트 크기를 셋해준다.
 	m_pDeviceResources->SetWindow(hwnd, width, height);
 
@@ -75,318 +61,10 @@ void HEngine::Initialize(HWND hwnd, int width, int height)
 	m_pDeviceResources->CreateWindowSizeDependentResources();//스왑체인을 생성
 	CreateWindowSizeDependentResources();					//Proj mat, view port 등 생성
 
-	// Create DirectXTK for Audio objects
-	AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
-#ifdef _DEBUG
-	eflags = eflags | AudioEngine_Debug;
-#endif
-
-	m_audEngine = std::make_unique<AudioEngine>(eflags);
-
-	m_audioEvent = 0;
-	m_audioTimerAcc = 10.f;
-	m_retryDefault = false;
-
-	wchar_t strFilePath[MAX_PATH];
-	//DX::FindMediaFile(strFilePath, MAX_PATH, L"adpcmdroid.xwb");
-
-	//m_waveBank = std::make_unique<WaveBank>(m_audEngine.get(), strFilePath);
-	//DX::FindMediaFile(strFilePath, MAX_PATH, L"DADDY-DADDY-DO-feat-Airi-Suzuki- (online-audio-converter.com).wav");
-	//m_soundEffect = std::make_unique<SoundEffect>(m_audEngine.get(), strFilePath);
-	//m_effect1 = m_soundEffect->CreateInstance();
-	//m_effect2 = m_waveBank->CreateInstance(10);
-
-	//m_effect1->Play(true);
-	//m_effect1->Pause();
-	//m_effect2->Play();
-
 	m_camera.SetPosition(0.0f, 0.0f, -50.0f);
-
 }
 
 #pragma region WindowCreate & Message Handlers 
-
-/*
-LRESULT CALLBACK
-MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT ps;
-	HDC hdc;
-
-	static bool s_in_sizemove = false;
-	static bool s_in_suspend = false;
-	static bool s_minimized = false;
-	static bool s_fullscreen = false;
-	// Set s_fullscreen to true if defaulting to fullscreen.
-
-	//InitWindow함수에서 저장해둔 포인터를 불러온다.
-	auto sample = reinterpret_cast<HEngine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
-	switch (message)
-	{
-	case WM_CREATE:
-		if (!g_hNewAudio)
-		{
-			// Ask for notification of new audio devices
-			DEV_BROADCAST_DEVICEINTERFACE filter = {};
-			filter.dbcc_size = sizeof(filter);
-			filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-			filter.dbcc_classguid = KSCATEGORY_AUDIO;
-
-			g_hNewAudio = RegisterDeviceNotification(hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
-		}
-		break;
-
-	case WM_CLOSE:
-		if (g_hNewAudio)
-		{
-			UnregisterDeviceNotification(g_hNewAudio);
-			g_hNewAudio = nullptr;
-		}
-		DestroyWindow(hWnd);
-		break;
-
-	case WM_DEVICECHANGE:
-		switch (wParam)
-		{
-		case DBT_DEVICEARRIVAL:
-		{
-			auto pDev = reinterpret_cast<PDEV_BROADCAST_HDR>(lParam);
-			if (pDev)
-			{
-				if (pDev->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-				{
-					auto pInter = reinterpret_cast<const PDEV_BROADCAST_DEVICEINTERFACE>(pDev);
-					if (pInter->dbcc_classguid == KSCATEGORY_AUDIO)
-					{
-						if (sample)
-							sample->NewAudioDevice();
-					}
-				}
-			}
-		}
-		break;
-
-		case DBT_DEVICEREMOVECOMPLETE:
-		{
-			auto pDev = reinterpret_cast<PDEV_BROADCAST_HDR>(lParam);
-			if (pDev)
-			{
-				if (pDev->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-				{
-					auto pInter = reinterpret_cast<const PDEV_BROADCAST_DEVICEINTERFACE>(pDev);
-					if (pInter->dbcc_classguid == KSCATEGORY_AUDIO)
-					{
-						if (sample)
-							sample->NewAudioDevice();
-					}
-				}
-			}
-		}
-		break;
-		}
-		return 0;
-
-	case WM_PAINT:
-		if (s_in_sizemove && sample)
-		{
-			sample->Tick();
-		}
-		else
-		{
-			hdc = BeginPaint(hWnd, &ps);
-			EndPaint(hWnd, &ps);
-		}
-		break;
-
-	case WM_SIZE:
-		if (wParam == SIZE_MINIMIZED)
-		{
-			if (!s_minimized)
-			{
-				s_minimized = true;
-				if (!s_in_suspend && sample)
-					sample->OnSuspending();
-				s_in_suspend = true;
-			}
-		}
-		else if (s_minimized)
-		{
-			s_minimized = false;
-			if (s_in_suspend && sample)
-				sample->OnResuming();
-			s_in_suspend = false;
-		}
-		else if (!s_in_sizemove && sample)
-		{
-			sample->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
-		}
-		break;
-
-	case WM_ENTERSIZEMOVE:
-		s_in_sizemove = true;
-		break;
-
-	case WM_EXITSIZEMOVE:
-		s_in_sizemove = false;
-		if (sample)
-		{
-			RECT rc;
-			GetClientRect(hWnd, &rc);
-
-			sample->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
-		}
-		break;
-
-	case WM_GETMINMAXINFO:
-	{
-		auto info = reinterpret_cast<MINMAXINFO*>(lParam);
-		info->ptMinTrackSize.x = 320;
-		info->ptMinTrackSize.y = 200;
-	}
-	break;
-
-	case WM_ACTIVATEAPP:
-		if (sample)
-		{
-			Keyboard::ProcessMessage(message, wParam, lParam);
-			Mouse::ProcessMessage(message, wParam, lParam);
-
-			if (wParam)
-			{
-				sample->OnActivated();
-			}
-			else
-			{
-				sample->OnDeactivated();
-			}
-		}
-		break;
-
-	case WM_POWERBROADCAST:
-		switch (wParam)
-		{
-		case PBT_APMQUERYSUSPEND:
-			if (!s_in_suspend && sample)
-				sample->OnSuspending();
-			s_in_suspend = true;
-			return TRUE;
-
-		case PBT_APMRESUMESUSPEND:
-			if (!s_minimized)
-			{
-				if (s_in_suspend && sample)
-					sample->OnResuming();
-				s_in_suspend = false;
-			}
-			return TRUE;
-		}
-		break;
-
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-
-	case WM_INPUT:
-	case WM_MOUSEMOVE:
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_MOUSEWHEEL:
-	case WM_XBUTTONDOWN:
-	case WM_XBUTTONUP:
-	case WM_MOUSEHOVER:
-		Mouse::ProcessMessage(message, wParam, lParam);
-		break;
-
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-	case WM_SYSKEYUP:
-		Keyboard::ProcessMessage(message, wParam, lParam);
-		break;
-
-	case WM_SYSKEYDOWN:
-		if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
-		{
-			// Implements the classic ALT+ENTER fullscreen toggle
-			if (s_fullscreen)
-			{
-				SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-				SetWindowLongPtr(hWnd, GWL_EXSTYLE, 0);
-
-				int width = 800;
-				int height = 600;
-				if (sample)
-					sample->GetDefaultSize(width, height);
-
-				ShowWindow(hWnd, SW_SHOWNORMAL);
-
-				SetWindowPos(hWnd, HWND_TOP, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-			}
-			else
-			{
-				SetWindowLongPtr(hWnd, GWL_STYLE, 0);
-				SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_TOPMOST);
-
-				SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-				ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-			}
-
-			s_fullscreen = !s_fullscreen;
-		}
-		Keyboard::ProcessMessage(message, wParam, lParam);
-		break;
-
-	case WM_MENUCHAR:
-		// A menu is active and the user presses a key that does not correspond
-		// to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
-		return MAKELRESULT(0, MNC_CLOSE);
-	}
-
-	return DefWindowProc(hWnd, message, wParam, lParam);
-}
-*/
-
-/*HWND HEngine::InitWindow(HINSTANCE instance, LONG clientWidth, LONG clientHeight)
-{
-	WNDCLASSEXW wcex;
-	wcex.cbSize = sizeof(WNDCLASSEXW);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = MainWndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = instance;
-	wcex.hIcon = LoadIconW(instance, L"IDI_ICON");
-	wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = nullptr;
-	wcex.lpszClassName = L"random name";
-	wcex.hIconSm = LoadIconW(wcex.hInstance, L"IDI_ICON");
-
-	RegisterClassExW(&wcex);
-
-	RECT R = { 0, 0, clientWidth, clientHeight };
-
-	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, FALSE);
-	std::wstring caption = L"initialCaption";
-
-	HWND hwnd = CreateWindowExW(0, L"random name", caption.c_str(), WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, R.right - R.left, R.bottom - R.top, nullptr, nullptr, instance,
-		nullptr);
-
-	//아래 함수로 인해 WinProc함수에 들어가더라도 엔진 초기화 전에는 엔진의 기능을 사용하지 않는다.
-	ShowWindow(hwnd, SW_SHOW);
-
-	//엔진의 포인터를 윈도우에 세팅해준다. WndProc함수에서 이를 다시 불러와서 사용할 것이다.
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(m_app));
-
-	return hwnd;
-}*/
-
 void HEngine::OnActivated()
 {
 
@@ -399,15 +77,12 @@ void HEngine::OnDeactivated()
 
 void HEngine::OnSuspending()
 {
-	m_audEngine->Suspend();
+
 }
 
 void HEngine::OnResuming()
 {
 	m_timer.ResetElapsedTime();
-	m_gamePadButtons.Reset();
-	m_keyboardButtons.Reset();
-	m_audEngine->Resume();
 }
 
 void HEngine::OnWindowSizeChanged(int width, int height)
@@ -416,16 +91,6 @@ void HEngine::OnWindowSizeChanged(int width, int height)
 		return;
 
 	CreateWindowSizeDependentResources();
-}
-
-void HEngine::NewAudioDevice()
-{
-	if (m_audEngine && !m_audEngine->IsAudioDevicePresent())
-	{
-		// Setup a retry in 1 second
-		m_audioTimerAcc = 1.f;
-		m_retryDefault = true;
-	}
 }
 
 void HEngine::GetDefaultSize(int& width, int& height) const
@@ -444,72 +109,12 @@ void HEngine::Tick()
 			Update(m_timer);
 		});
 
-	// Only update audio engine once per frame
-	if (!m_audEngine->IsCriticalError() && m_audEngine->Update())
-	{
-		// Setup a retry in 1 second
-		m_audioTimerAcc = 1.f;
-		m_retryDefault = true;
-	}
-
 	Render();
 }
 
 void HEngine::Update(DX::StepTimer const& timer)
 {
 	PIXBeginEvent(PIX_COLOR_DEFAULT, L"Update");
-
-	//오디오 업데이트
-	m_audioTimerAcc -= (float)timer.GetElapsedSeconds();
-	if (m_audioTimerAcc < 0)
-	{
-		if (m_retryDefault)
-		{
-			m_retryDefault = false;
-			if (m_audEngine->Reset())
-			{
-				// Restart looping audio
-				if (m_effect1.get() != nullptr)
-					m_effect1->Play(true);
-			}
-		}
-		else
-		{
-			m_audioTimerAcc = 4.f;
-
-			if (m_waveBank.get() != nullptr)
-				m_waveBank->Play(m_audioEvent++);
-
-			if (m_audioEvent >= 11)
-				m_audioEvent = 0;
-		}
-	}
-
-	//게임패드 업데이트
-	auto pad = m_gamePad->GetState(0);
-	if (pad.IsConnected())
-	{
-		m_gamePadButtons.Update(pad);
-
-		if (pad.IsViewPressed())
-		{
-			PostQuitMessage(0);
-		}
-	}
-	else
-	{
-		m_gamePadButtons.Reset();
-	}
-
-	//키보드 업데이트
-	auto kb = m_keyboard->GetState();
-	m_keyboardButtons.Update(kb);
-
-	if (kb.Escape)
-	{
-		PostQuitMessage(0);
-	}
-
 	//카메라 업데이트
 	m_camera.UpdateViewMatrix();
 
@@ -517,7 +122,7 @@ void HEngine::Update(DX::StepTimer const& timer)
 
 	m_passConstant.Update(m_camera, timer);
 
-	m_graphicPipeline.Update();
+	m_graphicPipeline.Update(timer.GetElapsedSeconds());
 
 	PIXEndEvent();
 }
@@ -568,7 +173,6 @@ void HEngine::CreateDeviceDependentResources()
 	m_picking.Initialize(m_pDeviceResources, m_pModelManager, &m_camera);
 	m_pHBufferManager = HBufferManager::GetInstance();
 
-
 	//GPU를 통한 리소스 생성에 필요한 객체(commandList, commandAlloc 등이 내재되어있다.)
 	ResourceUploadBatch resourceUpload(device);
 	//Command list 작성 시작
@@ -584,17 +188,17 @@ void HEngine::CreateWindowSizeDependentResources()
 {
 	auto size = m_pDeviceResources->GetOutputSize();
 
-	float aspectRatio = float(size.right) / float(size.bottom);
-	float fovAngleY = 60.0f * XM_PI / 180.0f;
+	//float aspectRatio = float(size.right) / float(size.bottom);
+	//float fovAngleY = 60.0f * XM_PI / 180.0f;
 
-	// This is a simple example of change that can be made when the app is in
-	// portrait or snapped view.
-	if (aspectRatio < 1.0f)
-	{
-		fovAngleY *= 2.0f;
-	}
+	//// This is a simple example of change that can be made when the app is in
+	//// portrait or snapped view.
+	//if (aspectRatio < 1.0f)
+	//{
+	//	fovAngleY *= 2.0f;
+	//}
 
-	m_camera.SetLens(fovAngleY, size.right, size.bottom, 1.0f, 1200.f);
+	//m_camera.SetLens(fovAngleY, size.right, size.bottom, 1.0f, 1800.f);
 
 
 	m_graphicPipeline.CreateWindowSizeDependetResources();
@@ -632,6 +236,11 @@ void HEngine::FinishSetting()
 	m_resourceUploadBatch.reset();
 }
 
+void HEngine::WaitGPU()
+{
+	m_pDeviceResources->WaitForGpu();
+}
+
 float HEngine::GetElapsedTime()
 {
 	return m_timer.GetElapsedSeconds();
@@ -652,9 +261,13 @@ HInstanceData* HEngine::Picking(unsigned int pickX, unsigned int pickY)
 	return m_picking.Update(pickX, pickY);
 }
 
+float HEngine::GetOrthoCameraPickingDepth(int screenX, int screenY)
+{
+	return m_picking.GetOrthoCameraPickingDepth(screenX, screenY);
+}
+
 void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-
 	PAINTSTRUCT ps;
 	HDC hdc;
 
@@ -669,69 +282,6 @@ void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 	switch (message)
 	{
-	case WM_CREATE:
-		if (!g_hNewAudio)
-		{
-			// Ask for notification of new audio devices
-			DEV_BROADCAST_DEVICEINTERFACE filter = {};
-			filter.dbcc_size = sizeof(filter);
-			filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-			filter.dbcc_classguid = KSCATEGORY_AUDIO;
-
-			g_hNewAudio = RegisterDeviceNotification(hWnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
-		}
-		break;
-
-	case WM_CLOSE:
-		if (g_hNewAudio)
-		{
-			UnregisterDeviceNotification(g_hNewAudio);
-			g_hNewAudio = nullptr;
-		}
-		DestroyWindow(hWnd);
-		break;
-
-	case WM_DEVICECHANGE:
-		switch (wParam)
-		{
-		case DBT_DEVICEARRIVAL:
-		{
-			auto pDev = reinterpret_cast<PDEV_BROADCAST_HDR>(lParam);
-			if (pDev)
-			{
-				if (pDev->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-				{
-					auto pInter = reinterpret_cast<const PDEV_BROADCAST_DEVICEINTERFACE>(pDev);
-					if (pInter->dbcc_classguid == KSCATEGORY_AUDIO)
-					{
-						if (m_app)
-							m_app->NewAudioDevice();
-					}
-				}
-			}
-		}
-		break;
-
-		case DBT_DEVICEREMOVECOMPLETE:
-		{
-			auto pDev = reinterpret_cast<PDEV_BROADCAST_HDR>(lParam);
-			if (pDev)
-			{
-				if (pDev->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-				{
-					auto pInter = reinterpret_cast<const PDEV_BROADCAST_DEVICEINTERFACE>(pDev);
-					if (pInter->dbcc_classguid == KSCATEGORY_AUDIO)
-					{
-						if (m_app)
-							m_app->NewAudioDevice();
-					}
-				}
-			}
-		}
-		break;
-		}
-		break;
-
 	case WM_PAINT:
 		if (s_in_sizemove && m_app)
 		{
@@ -832,27 +382,6 @@ void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		PostQuitMessage(0);
 		break;
 
-	case WM_INPUT:
-	case WM_MOUSEMOVE:
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_MOUSEWHEEL:
-	case WM_XBUTTONDOWN:
-	case WM_XBUTTONUP:
-	case WM_MOUSEHOVER:
-		Mouse::ProcessMessage(message, wParam, lParam);
-		break;
-
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-	case WM_SYSKEYUP:
-		Keyboard::ProcessMessage(message, wParam, lParam);
-		break;
-
 	case WM_SYSKEYDOWN:
 		if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
 		{
@@ -883,7 +412,6 @@ void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 			s_fullscreen = !s_fullscreen;
 		}
-		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 
 		//case WM_MENUCHAR:
@@ -891,24 +419,8 @@ void HEngine::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		//	// to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
 		//	return MAKELRESULT(0, MNC_CLOSE);
 	}
-
-	//return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-DirectX::Keyboard* HEngine::GetKeyboard()
-{
-	return m_keyboard.get();
-}
-
-DirectX::GamePad* HEngine::GetGamePad()
-{
-	return m_gamePad.get();
-}
-
-DirectX::Mouse* HEngine::GetMouse()
-{
-	return m_mouse.get();
-}
 
 void HEngine::AddDebugString(DebugString debugString)
 {
@@ -930,10 +442,10 @@ HSimplePrimitive* HEngine::CreateBox(Vector3 Size, unsigned char flag)
 	return HSimplePrimitiveManager::GetInstance()->CreateBox(Size, flag);
 }
 
-HMaterialData* HEngine::CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height)
+HMaterialData* HEngine::CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height, const WCHAR* emissive)
 {
 	return HTextureManager::GetInstance()->CreateMaterial(*m_resourceUploadBatch,
-		albedo, roughness, metallic, ao, normal, height);
+		albedo, roughness, metallic, ao, normal, height, emissive);
 }
 
 HModelData* HEngine::CreateModelFromFbxFile(std::string fbxfile)
@@ -972,9 +484,20 @@ HUIData* HEngine::CreateUI()
 	return HUIManager::GetInstance()->CreateUI();
 }
 
+HWaveData* HEngine::CreateWave(int m, int n, float dx, float speed, float damping)
+{
+	return HWaveEffect::GetInstance()->CreateWave(m, n, dx,0.03f,speed,damping);
+}
+
 void HEngine::LoadSkyBox(const WCHAR* skyboxDDSFile)
 {
 	m_textureManager->LoadSkybox(*m_resourceUploadBatch, skyboxDDSFile);
+}
+
+void HEngine::LoadColorChip(const WCHAR* baseColor, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* emissive)
+{
+	m_textureManager->LoadColorChip(*m_resourceUploadBatch, baseColor,
+		roughness, metallic, emissive);
 }
 
 void HEngine::LoadFont(const WCHAR* spriteFontFile)
@@ -1000,6 +523,16 @@ void HEngine::SetSSAO(bool bOnOff)
 void HEngine::SetWireFrame(bool bOnOff)
 {
 	m_graphicPipeline.SetWireFrame(bOnOff);
+}
+
+void HEngine::SetDOF(bool bOnOff)
+{
+	m_graphicPipeline.SetDOF(bOnOff);
+}
+
+void HEngine::SetDOFParams(float focusDepth, float maxBlurDepthGap)
+{
+	HPostProcess::GetInstance()->SetDOFParams(focusDepth, maxBlurDepthGap);
 }
 
 RECT HEngine::GetClientRectFromEngine()

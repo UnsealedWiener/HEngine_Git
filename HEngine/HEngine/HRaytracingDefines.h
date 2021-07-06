@@ -9,7 +9,7 @@ using namespace DirectX;
 struct __declspec(align(256)) ShaderParameter
 {
 	char ShaderIdentifier[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
-	UINT64 RootParameters[1]; //사용하지 않음
+	UINT64 RootParameters[7]; //사용하지 않음
 };
 //
 //namespace
@@ -26,30 +26,19 @@ struct __declspec(align(256)) ShaderParameter
 //	}
 //};
 
-enum class RootSig_Raytracing
-{
-	OutputBuffer,
-	RaytracingAccelerationStructure,
-	PassConstant,
-	IndexBuffer,
-	VertexBuffer,
-	VertexBuffer_Dynamic,
-	structuredBuffer_PerInstance,
-	structuredBuffer_PerModel,
-	Material,
-	GBuffer,
-	Light,
-	MaxCount,
-};
+
 
 enum class SRVUAVDescriptorHeapOffset_Raytracing
 {
 	OutputBuffer = 0,
-	Material = 1,
-	Skybox = 301,
-	Normal,
+	Material = OutputBuffer + 1 ,
+	Skybox = Material + 350,
+	ColorChip = Skybox + 1,
+	Normal = ColorChip + 4,
 	DepthMap,
-	MaxCount
+	MetallicRoughnessAoEmissive,
+	RandomTexture,
+	TotalCount
 
 };
 
@@ -57,5 +46,52 @@ enum class NonShaderVisibleDescriptorHeap : size_t
 {
 	eOutputBuffer = 0,
 	TotalCount
+};
+
+enum class GlobalRootSig
+{
+	eSceneConstant,
+	eSceneAS,
+	TotalCount,
+};
+
+enum class LocalRootSig_Raygen
+{
+	eOutputBuffer,					//heap range : register(u0)
+	eNormalBuffer,					//heap range : register(t0, space1)
+	eDepthBuffer,					//heap range : register(t1, space1)
+	eMetallicRoughnessAoEmissive,   //heap range : register(t3, space1)
+	eRandomTexture,					//heap range : register(t4, space1)
+	eTotalCount
+};
+
+enum class LocalRootSig_Miss
+{
+	eSkyBox,		//root parameter : register(t0, space1)
+	eTotalCount
+};
+
+enum class LocalRootSig_Hit0
+{
+	eStaticVertexBuffer,  //root parameter : register(t4, space1)
+	eDynamicVertexBuffer, //root parameter : register(t0, space1)
+	eIndexBuffer,		  //root parameter : register(t3, space1)
+	eLight,				  //root parameter : register(t2, space1)
+	eInstanceData,		  //root parameter : register(t1, space1)
+	eModelData,			  //root parameter : register(t5, space1)
+	eMaterialTextures,	  //heap range	   : register(t0, space2)
+	eTotalCount
+};
+
+enum class LocalRootSig_Hit1
+{
+	eStaticVertexBuffer,  //root parameter : register(t4, space1)
+	eDynamicVertexBuffer, //root parameter : register(t0, space1)
+	eIndexBuffer,		  //root parameter : register(t3, space1)
+	eLight,				  //root parameter : register(t2, space1)
+	eInstanceData,		  //root parameter : register(t1, space1)
+	eModelData,			  //root parameter : register(t5, space1)
+	eColorChipTexture,    //heap range	   : register(t0, space2)
+	eTotalCount
 };
 

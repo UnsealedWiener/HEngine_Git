@@ -1,15 +1,13 @@
-#pragma comment(lib,"HEngine.lib")
-
+#include"pch.h"
 #include"ExampleGame.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	PSTR cmdLine, int showCmd)
 {
-	ExampleGame game;
+	ExampleGame* pExampleGame = ExampleGame::GetInstance();
 
-	game.Initialize(hInstance, 1920, 1080);
+	pExampleGame->Initialize(hInstance, 1920, 1080);
 
-	
 	MSG msg = {};
 
 	while (WM_QUIT != msg.message)
@@ -21,11 +19,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 		}
 		else
 		{
-			game.Loop();
+			pExampleGame->Loop();
 		}
 	}
 
-	game.Finalize();
+	pExampleGame->Finalize();
 
 	return (int)msg.wParam;
 }

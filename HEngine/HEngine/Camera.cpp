@@ -115,12 +115,12 @@ float Camera::GetFarWindowHeight()const
 
 float Camera::GetOrthgraphicHeight() const
 {
-	return mOrthgraphicHeight;
+	return mOrthographicHeight;
 }
 
 float Camera::GetOrthgraphicWidth() const
 {
-	return mAspect * mOrthgraphicHeight;
+	return mAspect * mOrthographicHeight;
 }
 
 void Camera::SetLens(float fovY, float width, float height, float zn, float zf)
@@ -138,12 +138,26 @@ void Camera::SetLens(float fovY, float width, float height, float zn, float zf)
 	XMStoreFloat4x4(&mProj, P);
 
 	BoundingFrustum::CreateFromMatrix(m_boundingFrustum, P);
+}
 
-	P = XMMatrixOrthographicLH(mAspect * mFarWindowHeight/3, mFarWindowHeight/3, zn, zf);
+void Camera::SetOrthoGraphicLens(float width, float height, float zn, float zf, float boundingBoxBias)
+{
+	// cache properties
+	mAspect = width / height;
+	mOrthoNearZ = zn;
+	mOrthoFarZ = zf;
+
+	mOrthographicWidth = width;
+	mOrthographicHeight = height;
+
+	XMMATRIX P;
+
+	P = XMMatrixOrthographicLH(width, height, zn, zf);
 	XMStoreFloat4x4(&mProj_orthographic, P);
 
-	BoundingBox::CreateFromPoints(m_boundingBox, XMVectorSet(mAspect * mFarWindowHeight / 6, mFarWindowHeight / 6, zn, 1),
-		XMVectorSet(-mAspect * mFarWindowHeight / 6, -mFarWindowHeight / 6, zf, 1));
+	BoundingBox::CreateFromPoints(m_boundingBox_ortho,
+		XMVectorSet(boundingBoxBias* mOrthographicWidth/2, boundingBoxBias * mOrthographicHeight / 2, zn, 1),
+		XMVectorSet(-boundingBoxBias * mOrthographicWidth / 2, -boundingBoxBias * mOrthographicHeight / 2, zf, 1));
 }
 
 void Camera::LookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp)
@@ -296,5 +310,7 @@ void Camera::UpdateViewMatrix()
 		mViewDirty = false;
 	}
 }
+
+
 
 

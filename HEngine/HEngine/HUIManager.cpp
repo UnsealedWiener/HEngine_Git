@@ -41,23 +41,29 @@ void HUIManager::Update()
 
 	std::vector<HStructuredBuffer_PerInstance_UI> perInstanceDatas;
 
-	for (std::pair<void *const, std::unique_ptr<HUI>>& e : m_uiList)
+	for (std::pair<void *, std::unique_ptr<HUI>>& e : m_uiList)
+	//for (std::unique_ptr<HUI>& e : m_uiList)
 	{
-		HStructuredBuffer_PerInstance_UI perInstanceData;
-
 		HUI* pHUI = e.second.get();
+		//HUI* pHUI = e.get();
+
+
+		if (!pHUI->bDrawOnOff)
+			continue;
+
+		HStructuredBuffer_PerInstance_UI perInstanceData;
 
 		Matrix world;
 		if (pHUI->bIsAbsolutePosition)
 		{
-			Matrix scale = Matrix::CreateScale(pHUI->width, pHUI->height, 1.f);
+			Matrix scale = Matrix::CreateScale(pHUI->size.x, pHUI->size.y, 1.f);
 			Matrix translation = Matrix::CreateTranslation(pHUI->leftTopPosition);
 			world *= scale;
 			world *= translation;
 		}
 		else
 		{
-			Matrix scale = Matrix::CreateScale(pHUI->width * width, pHUI->height * height, 1.f);
+			Matrix scale = Matrix::CreateScale(pHUI->size.x * width, pHUI->size.y * height, 1.f);
 
 			Vector3 Translation = pHUI->leftTopPosition;
 			Translation.x = Translation.x * width;
@@ -68,7 +74,7 @@ void HUIManager::Update()
 			world *= translation;
 		}
 
-		XMMATRIX matProj = XMMatrixOrthographicOffCenterLH(0.f, width, height, 0.f, 0.f, 1000.f);
+		XMMATRIX matProj = XMMatrixOrthographicOffCenterLH(0.f, width, height, 0.f, 0.f, 1.f);
 		Matrix proj = Matrix(matProj);
 
 		Matrix worldProj;
@@ -88,6 +94,8 @@ void HUIManager::Update()
 		perInstanceDatas.push_back(perInstanceData);
 
 	}
+
+	m_spriteInstancesCnt = perInstanceDatas.size();
 
 	if (perInstanceDatas.size() != 0)
 	{
@@ -124,11 +132,18 @@ void HUIManager::CreateWindowSizeDependentResources()
 HUIData* HUIManager::CreateUI()
 {
 	std::unique_ptr<HUI> pUi = std::make_unique<HUI>();
-	pUi->managerController = HManagerController(this, &m_uiList, pUi.get());
+	pUi->managerController = HManagerController_vector(this, &m_uiList, pUi.get());
 
 	HUIData* returnPtr = pUi.get();
+	//auto tmep = m_uiList.end();
+	//m_uiList.push_back(std::move(pUi));
 
-	m_uiList[returnPtr] = std::move(pUi);
+	 
+
+	//m_uiList[returnPtr] = std::move(pUi);
+	m_uiList.push_back(std::make_pair(returnPtr, std::move(pUi)));
+
+	
 
 	return returnPtr;
 }
@@ -206,6 +221,7 @@ void HUIManager::CreatePSO()
 	PsoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 
 	PsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	PsoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	PsoDesc.SampleMask = UINT_MAX;
 	PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	PsoDesc.NumRenderTargets = 1;
@@ -225,9 +241,9 @@ void HUIManager::CreateVertexIndexBuffer()
 	std::vector<HVertex_UI> vertexList;
 
 	HVertex_UI v0 = { Vector3(0,0,0), Vector2(0,0) };
-	HVertex_UI v1 = { Vector3(1,0,0), Vector2(1,0) };
-	HVertex_UI v2 = { Vector3(0, 1,0), Vector2(0,1) };
-	HVertex_UI v3 = { Vector3(1, 1,0), Vector2(1,1) };
+	HVertex_UI v1 = { Vector3(1,0,0), Vector2(0.99f,0) };
+	HVertex_UI v2 = { Vector3(0, 1,0), Vector2(0,0.99f) };
+	HVertex_UI v3 = { Vector3(1, 1,0), Vector2(0.99,0.99f) };
 
 	vertexList.push_back(v0);
 	vertexList.push_back(v1);
@@ -265,7 +281,9 @@ void HUIManager::CreateSpriteBatchForFont(ResourceUploadBatch& resourceBatch)
 
 	RenderTargetState rtState(m_pDeviceResources->GetBackBufferFormat(), m_pDeviceResources->GetDepthBufferFormat());
 
-	SpriteBatchPipelineStateDescription pd(rtState);
+	CD3DX12_DEPTH_STENCIL_DESC  defaultDepth = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	defaultDepth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	SpriteBatchPipelineStateDescription pd(rtState,nullptr, &defaultDepth);
 
 	m_sprites = std::make_unique<SpriteBatch>(device, resourceBatch, pd);
 
@@ -302,7 +320,7 @@ D3D12_INDEX_BUFFER_VIEW HUIManager::GetIndexBufferView()
 
 void HUIManager::Draw2DSprite()
 {
-	if (m_uiList.size() == 0)
+	if (m_spriteInstancesCnt == 0)
 		return;
 
 	m_pDeviceResources->SetUiViewPort();
@@ -330,22 +348,29 @@ void HUIManager::Draw2DSprite()
 	commandList->SetGraphicsRootDescriptorTable((UINT)RootSig_UI::eTextures,
 		m_pTextureManager->GetSpriteDescriptorHeap()->GetFirstGpuHandle());
 
-	commandList->DrawIndexedInstanced(6, m_uiList.size(), 0,
+	commandList->DrawIndexedInstanced(6, m_spriteInstancesCnt, 0,
 		0, 0);
 }
 
 void HUIManager::DrawFont()
 {
+	RECT output = m_pDeviceResources->GetOutputSize();
+	float width = output.right - output.left;
+	float height = output.bottom - output.top;
+
+
 	auto commandList = m_pDeviceResources->GetCommandList();
-
 	auto rtvDescriptor = m_pDeviceResources->GetRenderTargetView();
+	auto dsv = m_pDeviceResources->GetDepthStencilView();
 
-	commandList->OMSetRenderTargets(1, &rtvDescriptor, FALSE, nullptr);
+	commandList->OMSetRenderTargets(1, &rtvDescriptor, FALSE, &dsv);
 
 	ID3D12DescriptorHeap* heaps1[] = { m_FontDescriptorHeap->Heap() };
 	commandList->SetDescriptorHeaps(_countof(heaps1), heaps1);
 
 	m_sprites->Begin(commandList);
+
+	m_pDeviceResources->SetUiViewPort();
 
 	DXGI_QUERY_VIDEO_MEMORY_INFO result;
 	m_pDeviceResources->GerAdapter3()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &result);
@@ -364,16 +389,29 @@ void HUIManager::DrawFont()
 
 	if (m_font)
 	{
-		m_font->DrawString(m_sprites.get(), strFPS.c_str(), XMFLOAT2(100, startPosY), Colors::Black);
-		m_font->DrawString(m_sprites.get(), totalObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
-		m_font->DrawString(m_sprites.get(), visibleObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
-		m_font->DrawString(m_sprites.get(), gpuMemory.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black);
+
+#ifdef _DEBUG
+		m_font->DrawString(m_sprites.get(), strFPS.c_str(), XMFLOAT2(100, startPosY), Colors::Black, 0, XMFLOAT2(0, 0), XMFLOAT2(1, 1), DirectX::SpriteEffects::SpriteEffects_None, 0.0);
+		m_font->DrawString(m_sprites.get(), totalObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black, 0, XMFLOAT2(0, 0), XMFLOAT2(1, 1), DirectX::SpriteEffects::SpriteEffects_None, 0.0);
+		m_font->DrawString(m_sprites.get(), visibleObject.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black, 0, XMFLOAT2(0, 0), XMFLOAT2(1, 1), DirectX::SpriteEffects::SpriteEffects_None, 0.0);
+		m_font->DrawString(m_sprites.get(), gpuMemory.c_str(), XMFLOAT2(100, startPosY += 30), Colors::Black, 0, XMFLOAT2(0, 0), XMFLOAT2(1, 1), DirectX::SpriteEffects::SpriteEffects_None, 0.0);
+#endif // DEBUG
 
 		while (!m_debugStrings.empty())
 		{
 			DebugString& debugString = m_debugStrings.front();
-			m_font->DrawString(m_sprites.get(), debugString.message.c_str(), XMFLOAT2(debugString.posX, debugString.posY),
-				debugString.color);
+
+			if (debugString.bIsAbsolutePosition)
+			{
+				m_font->DrawString(m_sprites.get(), debugString.message.c_str(), XMFLOAT2(debugString.pos.x, debugString.pos.y),
+					debugString.color, 0, XMFLOAT2(0, 0), XMFLOAT2(debugString.size.x, debugString.size.y), DirectX::SpriteEffects::SpriteEffects_None, debugString.pos.z);
+				
+			}
+			else
+			{
+				m_font->DrawString(m_sprites.get(), debugString.message.c_str(), XMFLOAT2(debugString.pos.x * width, debugString.pos.y* height),
+					debugString.color, 0, XMFLOAT2(0, 0), XMFLOAT2(debugString.size.x, debugString.size.y), DirectX::SpriteEffects::SpriteEffects_None, debugString.pos.z);
+			}
 			m_debugStrings.pop_front();
 		}
 	}

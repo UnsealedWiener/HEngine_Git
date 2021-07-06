@@ -34,7 +34,7 @@ void HEngine_DX12_3D::Loop()
 void HEngine_DX12_3D::EndEngine()
 {
 	delete m_pHEngine;
-	CoUninitialize();
+	//CoUninitialize();
 }
 
 void HEngine_DX12_3D::ProcessWndMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -84,30 +84,6 @@ Camera* HEngine_DX12_3D::GetCamera()
 	return m_pHEngine->GetCamera();
 }
 
-DirectX::Keyboard* HEngine_DX12_3D::GetKeyboard()
-{
-	if (m_pHEngine == nullptr)
-		throw;
-
-	return m_pHEngine->GetKeyboard();
-}
-
-DirectX::GamePad* HEngine_DX12_3D::GetGamePad()
-{
-	if (m_pHEngine == nullptr)
-		throw;
-
-	return m_pHEngine->GetGamePad();
-}
-
-DirectX::Mouse* HEngine_DX12_3D::GetMouse()
-{
-	if (m_pHEngine == nullptr)
-		throw;
-
-	return m_pHEngine->GetMouse();
-}
-
 void HEngine_DX12_3D::AddDebugString(DebugString debugString)
 {
 	if (m_pHEngine == nullptr)
@@ -120,6 +96,13 @@ HInstanceData* HEngine_DX12_3D::Picking(unsigned int pickX, unsigned int pickY)
 	if (m_pHEngine == nullptr)
 		throw;
 	return m_pHEngine->Picking(pickX, pickY);
+}
+
+float HEngine_DX12_3D::GetOrthoCameraPickingDepth(int screenX, int screenY)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->GetOrthoCameraPickingDepth(screenX, screenY);
 }
 
 HProceduralGeometry_line* HEngine_DX12_3D::CreateLine(unsigned char flag)
@@ -171,6 +154,14 @@ void HEngine_DX12_3D::LoadSkyBox(const WCHAR* skyBoxDDSFile)
 	return m_pHEngine->LoadSkyBox(skyBoxDDSFile);
 }
 
+void HEngine_DX12_3D::LoadColorChip(const WCHAR* baseColor, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* emissive)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->LoadColorChip(baseColor,
+		roughness, metallic, emissive);
+}
+
 void HEngine_DX12_3D::LoadFont(const WCHAR* spriteFontFile)
 {
 	if (m_pHEngine == nullptr)
@@ -183,6 +174,13 @@ void HEngine_DX12_3D::SetReflectionEffect(bool bOnOff)
 	if (m_pHEngine == nullptr)
 		throw;
 	return m_pHEngine->SetReflectionEffect(bOnOff);
+}
+
+HWaveData* HEngine_DX12_3D::CreateWave(int m, int n, float dx, float speed, float damping)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->CreateWave(m, n, dx, speed, damping);
 }
 
 void HEngine_DX12_3D::SetShadowEffect(bool bOnOff)
@@ -206,11 +204,32 @@ void HEngine_DX12_3D::SetWireFrame(bool bOnOff)
 	return m_pHEngine->SetWireFrame(bOnOff);
 }
 
-HMaterialData* HEngine_DX12_3D::CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height)
+void HEngine_DX12_3D::SetDOF(bool bOnOff)
 {
 	if (m_pHEngine == nullptr)
 		throw;
-	return m_pHEngine->CreateMaterial(albedo, roughness, metallic, ao, normal, height);
+	return m_pHEngine->SetDOF(bOnOff);
+}
+
+void HEngine_DX12_3D::SetDOFParams(float focusDepth, float maxBlurDepthGap)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->SetDOFParams(focusDepth, maxBlurDepthGap);
+}
+
+void HEngine_DX12_3D::WaitGPU()
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	m_pHEngine->WaitGPU();
+}
+
+HMaterialData* HEngine_DX12_3D::CreateMaterial(const WCHAR* albedo, const WCHAR* roughness, const WCHAR* metallic, const WCHAR* ao, const WCHAR* normal, const WCHAR* height, const WCHAR* emissive)
+{
+	if (m_pHEngine == nullptr)
+		throw;
+	return m_pHEngine->CreateMaterial(albedo, roughness, metallic, ao, normal, height, emissive);
 }
 
 HSpriteData* HEngine_DX12_3D::CreateSprite(const WCHAR* spriteFile)

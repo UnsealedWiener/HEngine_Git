@@ -11,14 +11,16 @@ namespace HComputeLightingDefines
 		eAlbedo,
 		eMetallicRoughnessAo,
 		eNormal,
+		eEmissive,
 		eDepth,
 		eReflect,
 		eShadow,
 		eSSAO,
-		eOutput,
+		eOutput0,
+		
 
 		InputTextureStart = eAlbedo,
-		OutputTexutreStart = eOutput,
+		OutputTexutreStart = eOutput0,
 
 		OutputTextureCount = 1,
 		InputTextureCount = OutputTexutreStart - InputTextureStart,

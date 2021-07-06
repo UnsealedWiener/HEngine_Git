@@ -58,6 +58,9 @@ public:
 	
 	// Set frustum.
 	void SetLens(float fovY, float width, float height, float zn, float zf);
+	void SetOrthoGraphicLens(float width, float height, float zn, float zf
+	,float boundingBoxBias);
+	//void SetOrthGraphicLens()
 
 	// Define camera space via LookAt parameters.
 	void LookAt(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR target, DirectX::FXMVECTOR worldUp);
@@ -71,7 +74,7 @@ public:
 	DirectX::XMFLOAT4X4 GetProj4x4f()const;
 
 	const DirectX::BoundingFrustum& GetPerspectiveBoudingFrustum() const{ return m_boundingFrustum; }
-	const DirectX::BoundingBox& GetOrthographicBoudingBox() const{ return m_boundingBox; }
+	const DirectX::BoundingBox& GetOrthographicBoudingBox() const{ return m_boundingBox_ortho; }
 
 
 	// Strafe/Walk the camera a distance d.
@@ -84,7 +87,6 @@ public:
 
 	// After modifying camera position/orientation, call to rebuild the view matrix.
 	void UpdateViewMatrix();
-
 	CameraMode GetCamMode() const{return m_camMode;}
 private:
 
@@ -101,7 +103,13 @@ private:
 	float mFovY = 0.0f;
 	float mNearWindowHeight = 0.0f;
 	float mFarWindowHeight = 0.0f;
-	float mOrthgraphicHeight = 0.0f;
+
+
+
+	float mOrthoNearZ = 0.0f;
+	float mOrthoFarZ = 0.0f;
+	float mOrthographicHeight = 0.0f;
+	float mOrthographicWidth = 0.f;
 
 	bool mViewDirty = true;
 
@@ -113,7 +121,7 @@ private:
 	CameraMode m_camMode = CameraMode::ePerspective;
 
 	DirectX::BoundingFrustum m_boundingFrustum; //perspective
-	DirectX::BoundingBox m_boundingBox;	//orthographic
+	DirectX::BoundingBox m_boundingBox_ortho;	//orthographic
 };
 
 #endif // CAMERA_H

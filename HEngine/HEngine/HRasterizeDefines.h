@@ -6,17 +6,21 @@ using namespace DirectX;
 
 namespace HRasterizeDefines
 {
-
-	enum PSOTYPE
+	enum class PSOTYPE
 	{
-		NOOPTION_PSO = 0B00000000,
-		MSAA_PSO = 0B00000001,
-		WIREFRAME_PSO = 0B00000010,
-		TWOMAT_PSO = 0B00000100,
-		TESS_PSO = 0B00001000,
-		ALLOPTION_PSO = MSAA_PSO | WIREFRAME_PSO | TWOMAT_PSO | TESS_PSO,
-		DEFAULT_PSO = MSAA_PSO,
+
+		DEFAULT,
+		COLORCHIP,
+		WIREFRAME
 	};
+
+	PSOTYPE operator*(PSOTYPE c);
+	PSOTYPE operator++(PSOTYPE& x);
+	PSOTYPE begin(PSOTYPE r);
+	PSOTYPE end(PSOTYPE r);
+
+
+
 
 	enum class RootSig_Rasterize
 	{
@@ -26,14 +30,16 @@ namespace HRasterizeDefines
 		ConstantBuffer_perModel,
 		ConstantBuffer_pass,
 		Textures,
-		MaxCount
+		ColorChip,
+		TotalCount
 	};
 
 	enum class SRVUAVDescriptorHeapOffset_Rasterize
 	{
-		Material = 0,
-		SkyBox = 300,
-		MaxCount = 301,
+		Material = 0,//material 350
+		SkyBox = Material + 350,//skybox 1
+		ColorChip = SkyBox + 1,//colorchip 4
+		TotalCount = ColorChip + 4,
 	};
 
 	//enum class RootSig_Compute_DeferredRender
@@ -49,6 +55,7 @@ namespace HRasterizeDefines
 		eAlbedo,
 		eMetallicRoughnessAo,
 		eNormal,
+		eEmissive,
 		TotalCount,
 	};
 
