@@ -1,5 +1,17 @@
+#include "pch.h"
 #include "ExampleGame.h"
 #include<DirectXColors.h>
+
+ExampleGame* g_pExampleGame = nullptr;
+
+ExampleGame* ExampleGame::GetInstance()
+{
+	if (g_pExampleGame == nullptr)
+	{
+		g_pExampleGame = new ExampleGame;
+	}
+	return g_pExampleGame;
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -11,8 +23,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
-	case WM_CREATE:
+	
 	case WM_CLOSE:
+		DestroyWindow(hWnd);
+	case WM_CREATE:
 	case WM_DEVICECHANGE:
 	case WM_PAINT:
 	case WM_SIZE:
@@ -21,6 +35,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_GETMINMAXINFO:
 	case WM_ACTIVATEAPP:
 	case WM_POWERBROADCAST:
+		break;
 	case WM_INPUT:
 	case WM_MOUSEMOVE:
 	case WM_LBUTTONDOWN:
@@ -33,10 +48,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_XBUTTONDOWN:
 	case WM_XBUTTONUP:
 	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
 	case WM_SYSKEYDOWN:
+		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 
 	case WM_DESTROY:
@@ -125,60 +143,110 @@ void ExampleGame::AddGrid()
 	}
 }
 
-void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHeight)
+void ExampleGame::OutputDebugString()
 {
-	HWND hWnd = InitWindow(hInstance, clientWidth, clientHeight);
+	static bool bReflection = true;
+	static bool bShadow = true;
+	static bool bSsao = true;
 
-	//graphic initialize
-	m_p3DgraphicEngine = HEngine_DX12_3D::GetInstance();
-	m_p3DgraphicEngine->InitEngine(hWnd, clientWidth, clientHeight);
-	m_keyboard = m_p3DgraphicEngine->GetKeyboard();
-	m_pMouse = m_p3DgraphicEngine->GetMouse();
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F1))
+	{
+		bReflection = !bReflection;
+		m_p3DgraphicEngine->SetReflectionEffect(bReflection);
+	}
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F2))
+	{
+		bShadow = !bShadow;
+		m_p3DgraphicEngine->SetShadowEffect(bShadow);
+	}
+	if (m_keyboardTracker.IsKeyPressed(Keyboard::F3))
+	{
+		bSsao = !bSsao;
+		m_p3DgraphicEngine->SetSSAO(bSsao);
+	}
 
+	int startPosX = 100;
+	int startPosY = 100;
 
-	//그래픽 자원을 만들 때 StartSetting을 호출
-	//그래픽 카드에 여러 명령을 한번에 보내주기 위함
-	m_p3DgraphicEngine->StartSetting();
+	static std::string strRaytracing = "<F1> Raytracing(reflection) : ";
+	static std::string strShadowMap = "<F2> ShadowMap : ";
+	static std::string strSSAO = "<F3> SSAO : ";
 
-	//디폴트 스카이박스 세팅
-	//m_p3DgraphicEngine->LoadSkyBox(L"Media/Skybox/Skybox.dds");
-	//디폴트 폰트 세팅
-	m_p3DgraphicEngine->LoadFont(L"Media/Fonts/SegoeUI_18.spritefont");
+	DebugString debugString;
 
-	HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD3.hmodel");
-	//HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD3.hmodel");
-	//m_p3DgraphicEngine->SetReflectionEffect(false);
-	
-	std::vector<std::string> animList;
-	animList.push_back("Media/Model/Crunch/Crunch@idle.hanim");
-	animList.push_back("Media/Model/Crunch/Crunch@attack01.hanim");
+	debugString.color = bReflection ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strRaytracing + (bReflection ? "On" : "Off");
+	debugString.pos.x = startPosX;
+	debugString.pos.y = startPosY;
+	m_p3DgraphicEngine->AddDebugString(debugString);
 
-	HAnimData* pHAnim = m_p3DgraphicEngine->CreateAnimationFromHAnimFiles(animList);
+	debugString.color = bShadow ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strShadowMap + (bShadow ? "On" : "Off");
+	debugString.pos.y += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
 
-	//그래픽 자원을 생성하는 명령을 그래픽 카드에 보내줌
-	//이후 모든 명령이 수행될 때까지 기다린다.
-	m_p3DgraphicEngine->FinishSetting();
+	debugString.color = bSsao ? Colors::DarkOrange : Colors::DarkGray;
+	debugString.message = strSSAO + (bSsao ? "On" : "Off");
+	debugString.pos.y += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
 
+	debugString.color = Color(0.5f, 0.5f, 0.5f);
+	debugString.message = "MoveCamera : W/A/S/D & Mouse Left Click";
+	debugString.pos.y += 30.f;
+	m_p3DgraphicEngine->AddDebugString(debugString);
+}
 
+void ExampleGame::CameraControl(float dTime)
+{
+	Camera* camera = m_p3DgraphicEngine->GetCamera();
 
+	//free camera
+	{
+		if (m_keyboardTracker.GetLastState().W)
+			camera->Walk(50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().S)
+			camera->Walk(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().A)
+			camera->Strafe(-50.0f * dTime);
+		if (m_keyboardTracker.GetLastState().D)
+			camera->Strafe(+50.0f * dTime);
 
-	//pHModel_Crunch->SetAnimation(pHAnim);
+		static int lastPosX = 0;
+		static int lastPosY = 0;
 
-	m_p3DgraphicEngine->GetCamera()->LookAt(Vector3(0, 500, -500), Vector3(0, 0, 0), Vector3(0, 1, 0));
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
+		{
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
+		}
+		if (m_mouseTracker.leftButton == Mouse::ButtonStateTracker::HELD)
+		{
+			int xVec = m_mouseTracker.GetLastState().x - lastPosX;
+			int yVec = m_mouseTracker.GetLastState().y - lastPosY;
+			lastPosX = m_mouseTracker.GetLastState().x;
+			lastPosY = m_mouseTracker.GetLastState().y;
 
-	//HInstanceData* pHinstance = pHModel_Crunch->AddInstance(eNoOption_EI);
-	//pHinstance->worldTM = Matrix();
+			float dx = XMConvertToRadians(0.25f * static_cast<float>(xVec));
+			float dy = XMConvertToRadians(0.25f * static_cast<float>(yVec));
 
-	AddGrid();
-
+			camera->Pitch(dy);
+			camera->RotateY(dx);
+		}
+	}
 }
 
 void ExampleGame::Loop()
 {
 	float dTime = m_p3DgraphicEngine->GetElapsedTime();
 
+	m_pMyCharacter->animationTime += dTime;
+
 	m_keyboardTracker.Update(m_keyboard->GetState());
 	m_mouseTracker.Update(m_pMouse->GetState());
+
+
+	CameraControl(dTime);
+	OutputDebugString();
 
 	m_p3DgraphicEngine->Loop();
 }
@@ -186,4 +254,68 @@ void ExampleGame::Loop()
 void ExampleGame::Finalize()
 {
 	m_p3DgraphicEngine->EndEngine();
+	delete g_pExampleGame;
+	g_pExampleGame = nullptr;
+}
+
+void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHeight)
+{
+	HWND hWnd = InitWindow(hInstance, clientWidth, clientHeight);
+
+	//graphic initialize
+	m_p3DgraphicEngine = HEngine_DX12_3D::GetInstance();
+	m_p3DgraphicEngine->InitEngine(hWnd, clientWidth, clientHeight);
+	m_keyboard = std::make_unique<Keyboard>();
+	m_pMouse = std::make_unique<Mouse>();
+
+	//그래픽 자원을 만들 때 StartSetting을 호출
+	//그래픽 카드에 여러 명령을 한번에 보내주기 위함
+	m_p3DgraphicEngine->StartSetting();
+
+	//디폴트 스카이박스 세팅
+	m_p3DgraphicEngine->LoadSkyBox(L"../Media/Skybox/Skybox.dds");
+	//디폴트 폰트 세팅
+	m_p3DgraphicEngine->LoadFont(L"../Media/Fonts/SegoeUI_18.spritefont");
+
+	HModelData* pHModel_Crunch = m_p3DgraphicEngine->CreateModelFromHModelFile("../Media/Model/Crunch/Crunch_LOD3.hmodel");
+	HModelData* pHModel_Field = m_p3DgraphicEngine->CreateModelFromHModelFile("../Media/Model/Field0/Field0.hmodel");
+
+	std::vector<std::string> animList;
+	animList.push_back("../Media/Model/Crunch/Crunch@idle.hanim");
+
+	HAnimData* pHAnim = m_p3DgraphicEngine->CreateAnimationFromHAnimFiles(animList);
+
+	HMaterialData* pHMat_Spaceshipt = m_p3DgraphicEngine->CreateMaterial(L"../Media/Material/spaceShip/spaceShip_albedo.png",
+		L"../Media/Material/spaceShip/spaceShip_roughness.png",
+		L"../Media/Material/spaceShip/spaceShip_metallic.png",
+		L"../Media/Material/spaceShip/spaceShip_ao.png",
+		L"../Media/Material/spaceShip/spaceShip_normal.png",
+		L"../Media/Material/spaceShip/spaceShip_height.png",nullptr);
+
+	HMaterialData* pHMat_Bamboo = m_p3DgraphicEngine->CreateMaterial(L"../Media/Material/bamboo/bamboo_albedo.png",
+		L"../Media/Material/bamboo/bamboo_roughness.png",
+		L"../Media/Material/bamboo/bamboo_metallic.png",
+		L"../Media/Material/bamboo/bamboo_ao.png",
+		L"../Media/Material/bamboo/bamboo_normal.png",
+		nullptr, nullptr);
+
+	//그래픽 자원을 생성하는 명령을 그래픽 카드에 보내줌
+	//이후 모든 명령이 수행될 때까지 기다린다.
+	m_p3DgraphicEngine->FinishSetting();
+
+	pHModel_Crunch->SetAnimation(pHAnim);
+
+	m_p3DgraphicEngine->GetCamera()->LookAt(Vector3(0, 500, -500), Vector3(0, 0, 0), Vector3(0, 1, 0));
+
+	m_pMyCharacter = pHModel_Crunch->AddInstance(ShaderType::DEFAULT);
+	m_pMyCharacter->SetMaterial(pHMat_Spaceshipt);
+	m_pMyCharacter->animationName = "idle";
+
+	pHModel_Field->AddInstance(ShaderType::DEFAULT)->SetMaterial(pHMat_Bamboo);
+
+	HLightData* pLightData =  m_p3DgraphicEngine->CreateLight(LightType::eDirectLight);
+	pLightData->strength = Vector3(0.7f, 0.7f, 0.7f);
+
+	AddGrid();
+
 }
