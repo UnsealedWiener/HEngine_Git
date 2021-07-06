@@ -130,7 +130,7 @@ void HPassConstant::UpdateShadowTransform(const Camera& camera)
 	static BoundingSphere staticSphere;
 
 	staticSphere.Center = XMFLOAT3(0.f, 0.f, 0.f);
-	staticSphere.Radius = 1;// sqrtf(300.f * 300.f + 300.f * 300.f);
+	staticSphere.Radius = 1.0;// sqrtf(300.f * 300.f + 300.f * 300.f);
 
 	Ray ray(camera.GetPosition(), camera.GetLook3f());
 	Plane plane(Vector3(0, 0, 0), Vector3(0, 1, 0));
@@ -141,12 +141,22 @@ void HPassConstant::UpdateShadowTransform(const Camera& camera)
 	Vector3 newPostion = Vector3(camera.GetPosition()) + 
 		(Vector3(camera.GetLook3f()) * dist);
 
-	float scale = camera.GetFarWindowWidth() / 3;
+	float scale = 0.5;
+
+	if (camera.GetCamMode() == CameraMode::eOrthgraphic)
+	{
+		scale = camera.GetOrthgraphicWidth();
+	}
+	else
+	{
+		scale = camera.GetFarWindowWidth();
+	}
+
 
 	staticSphere.Transform(mSceneBounds, scale, XMVectorSet(0, 0, 0, 1), newPostion);
 
 	XMVECTOR lightDir = XMVectorSet(0.57735f, -0.57735f, 0.57735f, 0.f);
-	XMVECTOR lightPos = -1.0f * mSceneBounds.Radius * lightDir + mSceneBounds.Center;
+	XMVECTOR lightPos = -1.0 * mSceneBounds.Radius * lightDir + mSceneBounds.Center;
 	XMVECTOR targetPos = XMLoadFloat3(&mSceneBounds.Center);
 	XMVECTOR lightUp = XMVectorSet(0.f, 1.f, 0.f, 0.f);
 	XMMATRIX lightView = XMMatrixLookAtLH(lightPos, targetPos, lightUp);
@@ -154,12 +164,12 @@ void HPassConstant::UpdateShadowTransform(const Camera& camera)
 	XMFLOAT3 sphereCenterLS;
 	XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(targetPos, lightView));
 
-	float l = sphereCenterLS.x - mSceneBounds.Radius*2/3;
-	float b = sphereCenterLS.y - mSceneBounds.Radius*2/3;
-	float n = sphereCenterLS.z - mSceneBounds.Radius*2/3;
-	float r = sphereCenterLS.x + mSceneBounds.Radius*2/3;
-	float t = sphereCenterLS.y + mSceneBounds.Radius*2/3;
-	float f = sphereCenterLS.z + mSceneBounds.Radius*2/3;
+	float l = sphereCenterLS.x - mSceneBounds.Radius;
+	float b = sphereCenterLS.y - mSceneBounds.Radius;
+	float n = sphereCenterLS.z - mSceneBounds.Radius;
+	float r = sphereCenterLS.x + mSceneBounds.Radius;
+	float t = sphereCenterLS.y + mSceneBounds.Radius;
+	float f = sphereCenterLS.z + mSceneBounds.Radius;
 
 	XMMATRIX lightProj = XMMatrixOrthographicOffCenterLH(l, r, b, t, 1, f);
 
@@ -190,15 +200,15 @@ HLightData* HPassConstant::AddLight(LightType lightType)
 	switch (pHLight->lightType)
 	{
 	case eDirectLight:
-		pHLight->managerController = HManagerController(this, &m_directLight, pLightData);
+		pHLight->managerController = HManagerController_map(this, &m_directLight, pLightData);
 		m_directLight[pLightData] = std::move(pHLight);
 		break;
 	case ePointLight:
-		pHLight->managerController = HManagerController(this, &m_pointLight, pLightData);
+		pHLight->managerController = HManagerController_map(this, &m_pointLight, pLightData);
 		m_pointLight[pLightData] = std::move(pHLight);
 		break;
 	case eSpotLight:
-		pHLight->managerController = HManagerController(this, &m_spotLight, pLightData);
+		pHLight->managerController = HManagerController_map(this, &m_spotLight, pLightData);
 		m_spotLight[pLightData] = std::move(pHLight);
 		break;
 	default:

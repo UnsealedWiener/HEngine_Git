@@ -20,5 +20,6 @@ class HPicking
 public:
 	void Initialize(DX::DeviceResources* pDeviceResources, HModelManager* pHModelManager, Camera* pCamera);
 	HInstanceData* Update(int screenX, int screenY);
+	float GetOrthoCameraPickingDepth(int screenX, int screenY);
 
 };

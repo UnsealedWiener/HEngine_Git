@@ -21,8 +21,10 @@ class HUIManager
 
 	GraphicsMemory* m_pGraphicMemory;
 
-	std::unordered_map<void*, std::unique_ptr<HUI>> m_uiList;
-
+	//drawing 순서 때문에 vector 사용
+	//std::vector<std::unique_ptr<HUI>> m_uiList;
+	//std::map<void*, std::unique_ptr<HUI>> m_uiList;
+	std::vector<std::pair<void*, std::unique_ptr<HUI>>> m_uiList;
 
 	ComPtr<ID3D12RootSignature>										m_pRootSignature;
 	ComPtr<ID3D12PipelineState>										m_PSO;
@@ -37,6 +39,9 @@ class HUIManager
 	std::unique_ptr<DirectX::SpriteFont>            m_font;
 	std::unique_ptr<DirectX::DescriptorHeap>        m_FontDescriptorHeap;
 	std::deque<DebugString>							m_debugStrings;
+
+	//check draw instances cnt
+	unsigned int m_spriteInstancesCnt = 0;
 
 public:
 	static HUIManager* GetInstance();

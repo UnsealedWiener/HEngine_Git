@@ -42,18 +42,20 @@ bool HFbxImporter::ImportModel(const char* filename)
 	// Use the first argument as the filename for the importer.
 	if (!m_pImporter->Initialize(filename, -1, m_pFbxManager->GetIOSettings()))
 	{
-		std::cout << "The model fbx file is not found. Or the file path is not english." << "\n";
+		std::cout << "The fbx file is not found. Or the file path is not english." << "\n";
 		return false;
 	}
 
-	std::cout << "fbx file load succees." << "\n";
-
 	std::string fullPath = filename;
 
-	std::size_t dot = fullPath.rfind(".");
+	/*std::size_t dot = fullPath.rfind(".");
 	std::size_t slash = fullPath.rfind("/");
 
-	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);
+	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);*/
+
+	m_fileName = filename;
+
+	std::cout << m_fileName << " file load succees." << "\n";
 
 	// Create a new scene so that it can be populated by the imported file.
 	FbxScene* pScene = FbxScene::Create(m_pFbxManager, filename);
@@ -77,6 +79,8 @@ bool HFbxImporter::ImportModel(const char* filename)
 	
 	GenerateNodeData();
 
+	std::cout << m_fileName << " file generate succees." << "\n";
+
 	return true;
 
 }
@@ -85,18 +89,20 @@ bool HFbxImporter::ImportAnimation(const char* filename)
 {
 	if (!m_pImporter->Initialize(filename, -1, m_pFbxManager->GetIOSettings()))
 	{
-		std::cout << "The model fbx file is not found. Or the file path is not english." << "\n";
+		std::cout << "The fbx file is not found. Or the file path is not english." << "\n";
 		return false;
 	}
 
-	std::cout << "fbx file load succees." << "\n";
-
 	std::string fullPath = filename;
 
-	std::size_t dot = fullPath.rfind(".");
+	/*std::size_t dot = fullPath.rfind(".");
 	std::size_t slash = fullPath.rfind("/");
 
-	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);
+	m_fileName = fullPath.substr(slash + 1, dot - slash - 1);*/
+
+	m_fileName = filename;
+
+	std::cout << m_fileName << " file load succees." << "\n";
 
 	// Create a new scene so that it can be populated by the imported file.
 	FbxScene* pScene = FbxScene::Create(m_pFbxManager, filename);
@@ -130,6 +136,7 @@ bool HFbxImporter::ImportAnimation(const char* filename)
 
 	if (snailPos == std::string::npos)
 	{
+		std::cout << m_fileName << " file is doesn't have symbol '@'." << "\n";
 		throw;
 	}
 
@@ -138,6 +145,8 @@ bool HFbxImporter::ImportAnimation(const char* filename)
 	ProcessAnimations(pScene, animName);
 
 	pScene->Destroy();
+
+	std::cout << m_fileName << " file generate succees." << "\n";
 
 	return true;
 }
@@ -321,8 +330,6 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		case FbxGeometryElement::eDirect:
 		{
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(inCtrlPointIndex));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inCtrlPointIndex));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inCtrlPointIndex));
 		}
 		break;
 
@@ -330,8 +337,6 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		{
 			int index = normal->GetIndexArray().GetAt(inCtrlPointIndex);
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(index));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
 		}
 		break;
 		default:
@@ -344,22 +349,106 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		case FbxGeometryElement::eDirect:
 		{
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(inVertexCounter));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inVertexCounter));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inVertexCounter));
 		}
 		break;
 		case FbxGeometryElement::eIndexToDirect:
 		{
 			int index = normal->GetIndexArray().GetAt(inVertexCounter);
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(index));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
 		}
 		break;
 		default: throw std::exception("Invalid Reference");
 		}
 
 		break;
+	}
+
+	if (biNormal)
+	{
+		switch (biNormal->GetMappingMode())
+		{
+		case FbxGeometryElement::eByControlPoint:
+			switch (biNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inCtrlPointIndex));
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = biNormal->GetIndexArray().GetAt(inCtrlPointIndex);
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
+			}
+			break;
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+		case FbxGeometryElement::eByPolygonVertex:
+			switch (biNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inVertexCounter));
+			}
+			break;
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = biNormal->GetIndexArray().GetAt(inVertexCounter);
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
+			}
+			break;
+			default: throw std::exception("Invalid Reference");
+			}
+
+			break;
+		}
+	}
+
+	if (tangent)
+	{
+		switch (tangent->GetMappingMode())
+		{
+		case FbxGeometryElement::eByControlPoint:
+			switch (tangent->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inCtrlPointIndex));
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = tangent->GetIndexArray().GetAt(inCtrlPointIndex);
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
+			}
+			break;
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+		case FbxGeometryElement::eByPolygonVertex:
+			switch (tangent->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inVertexCounter));
+			}
+			break;
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = tangent->GetIndexArray().GetAt(inVertexCounter);
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
+			}
+			break;
+			default: throw std::exception("Invalid Reference");
+			}
+
+			break;
+		}
 	}
 
 }
@@ -848,7 +937,9 @@ FbxAMatrix HFbxImporter::GetGeometryTransformaton(FbxNode* pNode)
 
 void HFbxImporter::WriteHModelFile()
 {
-	std::string outputFile = m_fileName;
+	std::string key = ".";
+	size_t dotPos = m_fileName.rfind(key);
+	std::string outputFile = m_fileName.substr(0, dotPos);
 	outputFile += ".hmodel";
 
 	std::ofstream writeFile(outputFile.c_str(), std::ostream::binary);
@@ -909,7 +1000,9 @@ void HFbxImporter::WriteHModelFile()
 
 void HFbxImporter::WriteHAnimFile()
 {
-	std::string outputFile = m_fileName;
+	std::string key = ".";
+	size_t dotPos = m_fileName.rfind(key);
+	std::string outputFile = m_fileName.substr(0, dotPos);
 	outputFile += ".hanim";
 
 	std::ofstream writeFile(outputFile.c_str(), std::ostream::binary);
@@ -936,7 +1029,7 @@ void HFbxImporter::WriteHAnimFile()
 
 	writeFile.close();
 
-	std::cout << "Creating hmodel file success." << "\n";
+	std::cout << "Creating hanim file success." << "\n";
 }
 
 FbxAMatrix HFbxImporter::GetGeometryTransformation(FbxNode* pnode)

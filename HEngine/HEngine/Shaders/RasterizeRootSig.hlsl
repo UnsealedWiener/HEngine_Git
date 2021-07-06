@@ -27,9 +27,18 @@ struct PerPsoData
 //MatIndex + 3 = ao
 //MatIndex + 4 = normal
 //MatIndex + 5 = height
+//MatIndex + 6 = emissive
 
-Texture2D Textures[300] :    register(t0, space0);
-TextureCube Skybox      : register(t300, space0);
+
+
+Texture2D Textures[350] :    register(t0, space0);
+TextureCube Skybox      : register(t350, space0);
+
+Texture2D baseColor_colorChip : register(t0, space2);
+Texture2D roughness_colorChip : register(t1, space2);
+Texture2D metallic_colorChip : register(t2, space2);
+Texture2D emissive_colorChip : register(t3, space2);
+
 
 // Put in space1, so the texture array does not overlap with these resources.  
 // The texture array will occupy registers t0, t1, ..., t6 in space0. 
@@ -46,11 +55,11 @@ SamplerState gsamAnisotropicWrap  : register(s4);
 SamplerState gsamAnisotropicClamp : register(s5);
 SamplerComparisonState gsamShadow : register(s6);
 
-cbuffer CBPerModel : register(b0)
+cbuffer CBPerModel : register(b1)
 {
     float4x4 gAxisChange;
     uint gBoneCount;
     uint padding[3];
 };
 
-ConstantBuffer<sceneVariables> scene : register(b1);
+ConstantBuffer<sceneVariables> scene : register(b0);

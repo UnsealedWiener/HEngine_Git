@@ -133,6 +133,7 @@ private:
 	void ProcessMesh(FbxNode* pNode, MeshData* pNodeOutput);
 	void ReadPosition(FbxMesh* inMesh, int inCtrlPointIndex, HModel_Vertex& vertex);
 	void ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, HModel_Vertex& vertex);
+
 	void ReadUV(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, HModel_Vertex& vertex);
 	void ReadBoneWeight(std::vector<BoneIndexWeight>& boneIndexWeight, int ctrlPoint, HModel_Vertex& vertex);
 	void CreateBoneWeight(FbxMesh* inMesh, std::vector<BoneIndexWeight>& boneIndexWeight, MeshData* pNodeOutput);

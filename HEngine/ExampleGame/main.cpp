@@ -9,7 +9,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
 	game.Initialize(hInstance, 1920, 1080);
 
-	
 	MSG msg = {};
 
 	while (WM_QUIT != msg.message)

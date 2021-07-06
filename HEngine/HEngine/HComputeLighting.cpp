@@ -24,15 +24,15 @@ void HComputeLighting::CreateDeviceDependentResources()
 	CreateComputePSO_ssao();
 }
 
-void HComputeLighting::CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo, ID3D12Resource* pNormal, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow, ID3D12Resource* pRandomVector, ID3D12Resource* pSSAO, ID3D12Resource* pResult)
+void HComputeLighting::CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo, ID3D12Resource* pNormal, ID3D12Resource* pEmissive, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow, ID3D12Resource* pRandomVector, ID3D12Resource* pSSAO, ID3D12Resource* pResult)
 {
-	CreateDesciptors_lightCalculation(pAlbedo, pMetallicRoughnessAo, pNormal, pDepth, pReflection, pShadow, pSSAO, pResult);
+	CreateDesciptors_lightCalculation(pAlbedo, pMetallicRoughnessAo, pNormal,pEmissive, pDepth, pReflection, pShadow, pSSAO, pResult);
 	CreateDesciptors_ssao(pDepth, pNormal, pRandomVector, pSSAO);
 }
 
 void HComputeLighting::CreateDesciptors_lightCalculation(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo, ID3D12Resource* pNormal,
-	ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow, ID3D12Resource* pSSAO,
-	ID3D12Resource* pResult)
+	ID3D12Resource* pEmissive, ID3D12Resource* pDepth, ID3D12Resource* pReflection, ID3D12Resource* pShadow, ID3D12Resource* pSSAO,
+	ID3D12Resource* pScene)
 {
 	auto device = m_pDeviceResources->GetD3DDevice();
 
@@ -59,6 +59,10 @@ void HComputeLighting::CreateDesciptors_lightCalculation(ID3D12Resource* pAlbedo
 		m_pDesciptorHeap_SRVUAV_lightCalculation->GetCpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eNormal));
 
 	device->CreateShaderResourceView(
+		pEmissive, &srvDesc,
+		m_pDesciptorHeap_SRVUAV_lightCalculation->GetCpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eEmissive));
+
+	device->CreateShaderResourceView(
 		pReflection, &srvDesc,
 		m_pDesciptorHeap_SRVUAV_lightCalculation->GetCpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eReflect));
 
@@ -82,10 +86,13 @@ void HComputeLighting::CreateDesciptors_lightCalculation(ID3D12Resource* pAlbedo
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	//uavDesc.Texture2D.MipSlice = 1;
 
 	device->CreateUnorderedAccessView(
-		pResult, nullptr, &uavDesc,
-		m_pDesciptorHeap_SRVUAV_lightCalculation->GetCpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eOutput));
+		pScene, nullptr, &uavDesc,
+		m_pDesciptorHeap_SRVUAV_lightCalculation->GetCpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eOutput0));
+
+
 }
 
 void HComputeLighting::CreateDesciptors_ssao(ID3D12Resource* pDepth, ID3D12Resource* pNormal, ID3D12Resource* pRandomVector, ID3D12Resource* pSSAO)
@@ -140,7 +147,7 @@ void HComputeLighting::ComputeLighting()
 	commandList->SetComputeRootDescriptorTable((UINT)RootSignatureList_lightCalculation::eTexuresInput,
 		m_pDesciptorHeap_SRVUAV_lightCalculation->GetGpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::InputTextureStart));
 	commandList->SetComputeRootDescriptorTable((UINT)RootSignatureList_lightCalculation::eTextureOutput,
-		m_pDesciptorHeap_SRVUAV_lightCalculation->GetGpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eOutput));
+		m_pDesciptorHeap_SRVUAV_lightCalculation->GetGpuHandle((UINT)DescriptorHeapList_SRVUAV_lightCalculation::eOutput0));
 	commandList->SetComputeRootConstantBufferView((UINT)RootSignatureList_lightCalculation::ePassConstant,
 		m_pPassConstant->GetPassConstantGpuAddress());
 	commandList->SetComputeRootShaderResourceView((UINT)RootSignatureList_lightCalculation::eLight,

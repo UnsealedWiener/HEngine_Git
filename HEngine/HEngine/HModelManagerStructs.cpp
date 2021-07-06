@@ -9,20 +9,38 @@ void HModel::Delete()
 	managerController.DeleteMe();
 }
 
-HInstanceData* HModel::AddInstance(unsigned char flag)
+HInstanceData* HModel::AddInstance(ShaderType type)
 {
 	std::shared_ptr<HInstance> pInstance
 		= std::make_shared<HInstance>();
 
-	pInstance->m_flag = flag;
+	PSOTYPE tempType;
+
+	switch (type)
+	{
+	case ShaderType::DEFAULT:
+		tempType = PSOTYPE::DEFAULT;
+		break;
+	case ShaderType::COLORCHIP:
+		tempType = PSOTYPE::COLORCHIP;
+		break;
+	case ShaderType::WIREFRAME:
+		tempType = PSOTYPE::WIREFRAME;
+		break;
+	default:
+		break;
+	}
+
+	pInstance->m_psoType = tempType;
+
 	pInstance->pModel = HModelManager::GetInstance()->m_models[this];
 	HModelManager::GetInstance()->m_instances[pInstance.get()] = pInstance;
 
 	HInstanceData* ptr = pInstance.get();
 
-	pInstance->managerController = HManagerController(this, &instances[flag], ptr);
+	pInstance->managerController = HManagerController_map(this, &instances[tempType], ptr);
 
-	instances[flag][ptr] = move(pInstance);
+	instances[tempType][ptr] = move(pInstance);
 
 	return ptr;
 }
@@ -77,16 +95,34 @@ void HInstance::SetMaterial(HMaterialData* pMaterial, unsigned int slot)
 		pMatSecond = matPointer->m_index;
 }
 
-void HInstance::SetShaderFlag(unsigned char flag)
+void HInstance::SetShaderFlag(ShaderType type)
 {
-	if (m_flag == flag)
+
+	PSOTYPE tempType;
+
+	switch (type)
+	{
+	case ShaderType::DEFAULT:
+		tempType = PSOTYPE::DEFAULT;
+		break;
+	case ShaderType::COLORCHIP:
+		tempType = PSOTYPE::COLORCHIP;
+		break;
+	case ShaderType::WIREFRAME:
+		tempType = PSOTYPE::WIREFRAME;
+		break;
+	default:
+		break;
+	}
+
+	if (m_psoType == tempType)
 		return;
 
 	HModel* pModelPointer = pModel.lock().get();
-	pModelPointer->instances[flag][this].swap(pModelPointer->instances[m_flag][this]);
-	managerController = HManagerController(pModelPointer, &pModelPointer->instances[flag], this);
-	pModelPointer->instances[m_flag].erase(this);
-	m_flag = flag;
+	pModelPointer->instances[tempType][this].swap(pModelPointer->instances[m_psoType][this]);
+	managerController = HManagerController_map(pModelPointer, &pModelPointer->instances[tempType], this);
+	pModelPointer->instances[m_psoType].erase(this);
+	m_psoType = tempType;
 }
 
 Matrix HInstance::GetBoneTMAtCurruntFrame(std::string boneName)

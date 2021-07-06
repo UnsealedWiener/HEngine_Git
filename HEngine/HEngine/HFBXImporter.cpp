@@ -321,8 +321,6 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		case FbxGeometryElement::eDirect:
 		{
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(inCtrlPointIndex));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inCtrlPointIndex));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inCtrlPointIndex));
 		}
 		break;
 
@@ -330,8 +328,6 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		{
 			int index = normal->GetIndexArray().GetAt(inCtrlPointIndex);
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(index));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
 		}
 		break;
 		default:
@@ -344,22 +340,106 @@ void HFbxImporter::ReadTangentBasis(FbxMesh* inMesh, int inCtrlPointIndex, int i
 		case FbxGeometryElement::eDirect:
 		{
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(inVertexCounter));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inVertexCounter));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inVertexCounter));
 		}
 		break;
 		case FbxGeometryElement::eIndexToDirect:
 		{
 			int index = normal->GetIndexArray().GetAt(inVertexCounter);
 			vertex.normal = ConvertFloat3(normal->GetDirectArray().GetAt(index));
-			vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
-			vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
 		}
 		break;
 		default: throw std::exception("Invalid Reference");
 		}
 
 		break;
+	}
+
+	if (biNormal)
+	{
+		switch (biNormal->GetMappingMode())
+		{
+		case FbxGeometryElement::eByControlPoint:
+			switch (biNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inCtrlPointIndex));
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = biNormal->GetIndexArray().GetAt(inCtrlPointIndex);
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
+			}
+			break;
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+		case FbxGeometryElement::eByPolygonVertex:
+			switch (biNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(inVertexCounter));
+			}
+			break;
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = biNormal->GetIndexArray().GetAt(inVertexCounter);
+				vertex.biNormV = ConvertFloat3(biNormal->GetDirectArray().GetAt(index));
+			}
+			break;
+			default: throw std::exception("Invalid Reference");
+			}
+
+			break;
+		}
+	}
+
+	if (tangent)
+	{
+		switch (tangent->GetMappingMode())
+		{
+		case FbxGeometryElement::eByControlPoint:
+			switch (tangent->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inCtrlPointIndex));
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = tangent->GetIndexArray().GetAt(inCtrlPointIndex);
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
+			}
+			break;
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+		case FbxGeometryElement::eByPolygonVertex:
+			switch (tangent->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(inVertexCounter));
+			}
+			break;
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = tangent->GetIndexArray().GetAt(inVertexCounter);
+				vertex.tangentU = ConvertFloat3(tangent->GetDirectArray().GetAt(index));
+			}
+			break;
+			default: throw std::exception("Invalid Reference");
+			}
+
+			break;
+		}
 	}
 
 }

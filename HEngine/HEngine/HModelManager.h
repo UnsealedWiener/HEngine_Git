@@ -50,6 +50,8 @@ private:
 	
 	//instance data
 	std::unordered_map<void*, std::weak_ptr<HInstance>> m_instances;
+	std::vector<HInstance*> m_visibleInstances;
+
 
 	std::vector<HVertex>												  m_allVertices;
 	std::vector<std::uint32_t>											  m_allIndices;
@@ -62,9 +64,10 @@ private:
 	SharedGraphicsResource												  m_raytracingStructuredBuffer_perInstance;
 	SharedGraphicsResource												  m_raytracingStructuredBuffer_perModel;
 
-	std::vector<ComPtr<ID3D12Resource>>									  m_pTopLevelAccelerationStructures;
-	std::vector<ComPtr<ID3D12Resource>>									  m_pTopLevelAccelerationStructureScratches;
-	std::vector<SharedGraphicsResource>									  m_pRaytracingInstanceDescs;
+	ComPtr<ID3D12Resource>									  m_pTopLevelAccelerationStructures;
+	ComPtr<ID3D12Resource>									  m_pTopLevelAccelerationStructureScratches;
+	
+	SharedGraphicsResource								  m_pRaytracingInstanceDescs;
 
 	//working
 
@@ -76,6 +79,7 @@ private:
 
 
 	bool m_bModelDirty = false;
+	bool m_bRaytracingDirty = false;
 	//used in raytracing
 	bool m_bInstanceDirty = false;
 public:
@@ -136,18 +140,20 @@ private:
 	//model manager update
 	void CheckInstanceAlive();
 	void MergeVertexIndexData();
-	void CheckInstanceCount();
+
 	void CheckFrustumCulling();
 	void CalNodeVertexIndexOffsetRecursively(HMesh* pNode, UINT ModelVertexOffset, UINT ModelIndexOffset);
 	
 	//rasterize resource update
 	void UpdatePerNodeResouceRecursively_rasterize(HMesh* pNode, UINT modelBoneCount);
 	void UpdatePerModelResouce_rasterize(HModel* pHModel);
-	void UpdatePerInstanceResouce_rasterize(HModel* pHModel, unsigned char shaderFlag);
-	void UpdatePerPSOResource_rasterize(HModel* pHModel, unsigned char shaderFlag, UINT& instanceOffset);
-	void UpdatePerInstanceStructuredBuffer_rasterize(/*std::unordered_map<void*, std::shared_ptr<HInstance>> const& instances*/
+	void UpdatePerInstanceResouce_rasterize(HModel* pHModel, PSOTYPE psoType);
+	void UpdatePerPSOResource_rasterize(HModel* pHModel, PSOTYPE psoType, UINT& instanceOffset);
+	void UpdatePerInstanceStructuredBuffer_onlyVisible_rasterize(/*std::unordered_map<void*, std::shared_ptr<HInstance>> const& instances*/
 		std::vector<HInstance*>& instances,
 		SharedGraphicsResource* pStructuredBuffer);
+
+
 	//void UpdateperInstanceBoneAnimationResouce_rasterize(HModel* pHModel, unsigned char shaderFlag);//¸ðµ¨´ÜÀ§·Î
 
 	void UpdateInstanceBoneAnimResource_common(std::vector<Matrix>& allBoneTM, HInstance* pHinstance, HModel* pHModel);

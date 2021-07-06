@@ -14,3 +14,8 @@ void HUI::SetSprite(HSpriteData* pSprite)
 	pTextureIndex = spritePointer->m_index;
 
 }
+
+void HUI::SetDrawOnOff(bool onOff)
+{
+	bDrawOnOff = onOff;
+}

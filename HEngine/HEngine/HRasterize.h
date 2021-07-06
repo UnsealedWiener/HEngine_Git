@@ -2,6 +2,7 @@
 #include"HRasterizeDefines.h"
 #include"EngineInterface.h"
 #include"HSimplePrimitiveManager.h"
+
 namespace DX
 {
 	class DeviceResources;
@@ -20,7 +21,7 @@ class HRasterize
 	const HTextureManager*			m_pTextureManager;
 
 	ComPtr<ID3D12RootSignature>										m_pRootSignature;
-	std::unordered_map<unsigned char, ComPtr<ID3D12PipelineState>>	m_PSOs;
+	std::unordered_map<HRasterizeDefines::PSOTYPE, ComPtr<ID3D12PipelineState>>		m_PSO_default;
 	ComPtr<ID3D12PipelineState>										m_shadowPSO;
 
 	std::unique_ptr<DescriptorHeap> m_pDescriptorHeap_SRV;
@@ -36,7 +37,7 @@ public:
 	void ClearShadowBuffer();
 	void Update();
 	void CreateDeviceDependentResources();
-	void CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo,
+	void CreateDescriptors (ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo, ID3D12Resource* pEmissive,
 		ID3D12Resource* pNormal, ID3D12Resource* pEdge);
 
 private:

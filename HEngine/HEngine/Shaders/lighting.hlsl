@@ -25,7 +25,7 @@ float3 UnGammaCorrection(float3 color)
 // Shlick's approximation of the Fresnel factor.
 float3 FresnelSchlick(float3 F0, float cosTheta)
 {
-	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	return F0 + (float3(1,1,1) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 // GGX/Towbridge-Reitz normal distribution function.
@@ -36,7 +36,18 @@ float NDFGGX(float cosLh, float roughness)
 	float alphaSq = alpha * alpha;
 
 	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
-	return alphaSq / (PI * denom * denom);
+
+	float result = alphaSq / (PI * denom * denom);
+
+	if (isinf(result))
+		result = 1.f;
+	if (isnan(result))
+		result = 0.f;
+	return result;
+
+	//float shininess = (1 - roughness)*256;
+	//return (shininess + 8.0f) * pow(cosLh, shininess) / 8.0f;
+
 }
 
 // Single term for separable Schlick-GGX below.

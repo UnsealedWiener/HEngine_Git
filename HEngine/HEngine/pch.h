@@ -9,10 +9,26 @@
 
 #pragma once
 
+#ifdef _DEBUG
+#include <dxgidebug.h>
+//fbxsdk
+#pragma comment(lib,"wininet.lib")
+#endif
+
+#ifdef _RELEASE
+#endif
+
+//directXTK12
+#pragma comment(lib,"DirectXTK12.lib")
+
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
+//fbxsdk
+#pragma comment(lib,"libfbxsdk-md.lib")
+#pragma comment(lib,"libxml2-md.lib")
+#pragma comment(lib,"zlib-md.lib")
 
 #include <WinSDKVer.h>
 #define _WIN32_WINNT 0x0A00

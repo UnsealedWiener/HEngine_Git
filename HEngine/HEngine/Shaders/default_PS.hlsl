@@ -54,6 +54,8 @@ float4 PS(PixelIn pin) : SV_Target
     float Roughness = Textures[matIndex + 1].Sample(gsamLinearWrap, pin.TexC).x;
     float Metallic  = Textures[matIndex + 2].Sample(gsamLinearWrap, pin.TexC).x;
     float Ao        = Textures[matIndex + 3].Sample(gsamLinearWrap, pin.TexC).x;
+    float Emissive = Textures[matIndex + 6].Sample(gsamLinearWrap, pin.TexC).x;
+
 
 
 

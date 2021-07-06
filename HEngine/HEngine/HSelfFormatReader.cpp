@@ -105,7 +105,7 @@ HAnimFormat* HSelfFormatReader::ReadHAnimFile(const char* file)
 
 	readFile.read(reinterpret_cast<char*>(&m_curruntHAnim->header), sizeof(HAnim_Header));
 	readFile.read(reinterpret_cast<char*>(&m_curruntHAnim->axisSystemModify), sizeof(XMFLOAT4X4));
-	
+
 	if (m_curruntHAnim->header.boneCount != 0)
 	{
 		m_curruntHAnim->pBone = new HAnim_Bone[m_curruntHAnim->header.boneCount];
@@ -126,6 +126,23 @@ HAnimFormat* HSelfFormatReader::ReadHAnimFile(const char* file)
 	}
 
 	readFile.close();
+
+
+	std::size_t snailPos = fileName.rfind("@");
+	if (snailPos == std::string::npos)
+	{
+		throw;
+	}
+
+	std::size_t hanimPos = fileName.rfind(".hanim");
+	if (hanimPos == std::string::npos)
+	{
+		throw;
+	}
+
+	std::string animName = fileName.substr(snailPos + 1, hanimPos - snailPos - 1);
+
+	memcpy(m_curruntHAnim->header.name, animName.data(), 256);
 
 	return m_curruntHAnim;
 }

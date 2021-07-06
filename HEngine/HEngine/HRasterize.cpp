@@ -5,6 +5,7 @@
 #include"HTextureManager.h"
 #include"HPassConstant.h"
 #include"HModelManager.h"
+#include"HWaveEffect.h"
 
 
 #include"default_VS.hlsl.h"
@@ -12,7 +13,6 @@
 
 #include"default_DS.hlsl.h"
 #include"default_HS.hlsl.h"
-
 #include"tess_VS.hlsl.h"
 #include"twoMatLerp_DS.hlsl.h"
 
@@ -20,6 +20,7 @@
 //#include"twoMatLerp_PS.hlsl.h"
 //deferred·Î ´ëÃ¼
 #include"default_PS_deffered.hlsl.h"
+#include"colorChip_PS_deffered.hlsl.h"
 #include"twoMatLerp_PS_deffered.hlsl.h"
 
 #include"shadow_VS.hlsl.h"
@@ -54,21 +55,16 @@ void HRasterize::DrawGBuffer(bool wireframe)
 		commandList->ClearRenderTargetView(m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eAlbedo), zero, 0, nullptr);
 		commandList->ClearRenderTargetView(m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eMetallicRoughnessAo), zero, 0, nullptr);
 		commandList->ClearRenderTargetView(m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eNormal), zero, 0, nullptr);
+		commandList->ClearRenderTargetView(m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eEmissive), zero, 0, nullptr);
+
 
 		commandList->ClearDepthStencilView(dsvCPU, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	PIXEndEvent(commandList);
 	
-
 	if (m_pModelManager->m_models.size() == 0|| m_pModelManager->m_visibleInstance == 0)
 		return;
-
-
-
-	unsigned char currentPSO = 0;
-	if (wireframe)
-		currentPSO |= WIREFRAME_PSO;
 
 	PIXBeginEvent(commandList, PIX_COLOR_DEFAULT, L"Render G-Buffer");
 
@@ -82,6 +78,9 @@ void HRasterize::DrawGBuffer(bool wireframe)
 	commandList->SetGraphicsRootDescriptorTable((UINT)RootSig_Rasterize::Textures,
 		m_pDescriptorHeap_SRV->GetFirstGpuHandle());
 
+	commandList->SetGraphicsRootDescriptorTable((UINT)RootSig_Rasterize::ColorChip,
+		m_pDescriptorHeap_SRV->GetGpuHandle((UINT)SRVUAVDescriptorHeapOffset_Rasterize::ColorChip));
+
 	D3D12_VERTEX_BUFFER_VIEW vbv = m_pModelManager->GetVertexBufferView();
 	D3D12_INDEX_BUFFER_VIEW ibv = m_pModelManager->GetIndexBufferView();
 	commandList->IASetVertexBuffers(0, 1, &vbv);
@@ -91,7 +90,7 @@ void HRasterize::DrawGBuffer(bool wireframe)
 	{
 		auto pModel = model.second.get();
 
-		if (pModel->visibleInstanceCount_temp == 0)
+		if (pModel->visibleInstanceCount == 0)
 			continue;
 
 		commandList->SetGraphicsRootConstantBufferView((UINT)RootSig_Rasterize::ConstantBuffer_perModel,
@@ -103,45 +102,49 @@ void HRasterize::DrawGBuffer(bool wireframe)
 				pModel->structuredBuffer_computeShader_boneTMs.GpuAddress());
 		}
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			unsigned char pso = 0;
-			pso |= currentPSO;
-
-			UINT instanceCount = pModel->visibleInstances[flag].size();
+			UINT instanceCount = pModel->visibleInstances[psoType].size();
 
 			if (instanceCount == 0)
 				continue;
-
-			if ((flag & TWOMAT_MM) != 0)
-				pso |= TWOMAT_PSO;
-
-			if ((flag & WIREFRAME_MM) != 0)
-				pso |= WIREFRAME_PSO;
-
-			if ((flag & TESS_MM) != 0)
-			{
-				pso |= TESS_PSO;
-				commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-			}
+		
+			commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			
+			if(wireframe)
+				commandList->SetPipelineState(m_PSO_default[PSOTYPE::WIREFRAME].Get());
 			else
-			{
-				commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			}
-
-			commandList->SetPipelineState(m_PSOs[pso].Get());
-
+				commandList->SetPipelineState(m_PSO_default[psoType].Get());
+			
 			commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_Rasterize::StructuredBuffer_perPSO,
-				pModel->structuredBuffer_perPso[flag].GpuAddress());
+				pModel->structuredBuffer_perPso[psoType].GpuAddress());
 
 			commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_Rasterize::StructuredBuffer_instances,
-				pModel->structuredBuffer_instances[flag].GpuAddress());
-
+				pModel->structuredBuffer_instances[psoType].GpuAddress());
 
 			commandList->DrawIndexedInstanced(pModel->rawData.indexData.size(), instanceCount, pModel->indexOffsetInEntireBuffer,
 				pModel->vertexOffsetInEntireBuffer, 0);
 		}
 	}
+
+	HWaveEffect::GetInstance()->Draw();
+
+	//std::unordered_map<void*, std::unique_ptr<Waves>>& m_waveList
+	// = HWaveEffect::GetInstance()->GetWaveList();
+	//
+	//for (auto& wave : m_waveList)
+	//{
+	//	Waves* pWave = wave.second.get();
+	//	if (!pWave)
+	//		continue;
+
+	//	D3D12_VERTEX_BUFFER_VIEW vbv = pWave->GetVertexBufferView();
+	//	D3D12_INDEX_BUFFER_VIEW ibv = pWave->GetIndexBufferView();
+
+	//	commandList->IASetVertexBuffers(0, 1, &vbv);
+	//	commandList->IASetIndexBuffer(&ibv);
+	//}
+	//commandList->mip
 
 	PIXEndEvent(commandList);
 }
@@ -167,14 +170,24 @@ void HRasterize::DrawShadow()
 
 	commandList->SetPipelineState(m_shadowPSO.Get());
 	commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->SetGraphicsRootSignature(m_pRootSignature.Get());
 
+	D3D12_VERTEX_BUFFER_VIEW vbv = m_pModelManager->GetVertexBufferView();
+	D3D12_INDEX_BUFFER_VIEW ibv = m_pModelManager->GetIndexBufferView();
+	commandList->IASetVertexBuffers(0, 1, &vbv);
+	commandList->IASetIndexBuffer(&ibv);
+
+	commandList->SetGraphicsRootSignature(m_pRootSignature.Get());
+
+	commandList->SetGraphicsRootConstantBufferView((UINT)RootSig_Rasterize::ConstantBuffer_pass,
+		m_pPassConstant->GetPassConstantGpuAddress());
 
 	for (auto& model : m_pModelManager->m_models)
 	{
 		auto pModel = model.second.get();
 
-		if (pModel->visibleInstanceCount_temp == 0)
-			continue;
+		if (pModel->visibleInstanceCount == 0)
+		continue;
 
 		commandList->SetGraphicsRootConstantBufferView((UINT)RootSig_Rasterize::ConstantBuffer_perModel,
 			pModel->perModelCB.GpuAddress());
@@ -185,18 +198,18 @@ void HRasterize::DrawShadow()
 				pModel->structuredBuffer_computeShader_boneTMs.GpuAddress());
 		}
 
-		for (unsigned char flag = 0; flag <= ALLOPTION_MM; flag++)
+		for (const PSOTYPE& psoType : PSOTYPE())
 		{
-			UINT instanceCount = pModel->visibleInstances[flag].size();
+			UINT instanceCount = pModel->visibleInstances[psoType].size();
 
 			if (instanceCount == 0)
 				continue;
 
 			commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_Rasterize::StructuredBuffer_perPSO,
-				pModel->structuredBuffer_perPso[flag].GpuAddress());
+				pModel->structuredBuffer_perPso[psoType].GpuAddress());
 
 			commandList->SetGraphicsRootShaderResourceView((UINT)RootSig_Rasterize::StructuredBuffer_instances,
-				pModel->structuredBuffer_instances[flag].GpuAddress());
+				pModel->structuredBuffer_instances[psoType].GpuAddress());
 
 			commandList->DrawIndexedInstanced(pModel->rawData.indexData.size(), instanceCount, pModel->indexOffsetInEntireBuffer,
 				pModel->vertexOffsetInEntireBuffer, 0);
@@ -237,6 +250,13 @@ void HRasterize::Update()
 			&handle,
 			SKYBOXMAP_COUNT);
 
+		handle = m_pTextureManager->GetColorChipDescriptorHeap()->GetFirstCpuHandle();
+
+		m_pDescriptorHeap_SRV->WriteDescriptors(m_pDeviceResources->GetD3DDevice(),
+			(UINT)SRVUAVDescriptorHeapOffset_Rasterize::ColorChip,
+			&handle,
+			COLORCHIP_TEXTURECOUNT);
+
 		m_pTextureManager->SetRasterizeDirty(false);
 	}
 
@@ -249,7 +269,7 @@ void HRasterize::CreateDeviceDependentResources()
 	CreatePSOs();
 }
 
-void HRasterize::CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo,
+void HRasterize::CreateDescriptors (ID3D12Resource* pAlbedo, ID3D12Resource* pMetallicRoughnessAo, ID3D12Resource* pEmissive,
 	ID3D12Resource* pNormal, ID3D12Resource* pShadow)
 {
 	auto device = m_pDeviceResources->GetD3DDevice();
@@ -265,6 +285,10 @@ void HRasterize::CreateDescriptors(ID3D12Resource* pAlbedo, ID3D12Resource* pMet
 	device->CreateRenderTargetView(
 		pMetallicRoughnessAo, &rtvDesc,
 		m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eMetallicRoughnessAo));
+
+	device->CreateRenderTargetView(
+		pEmissive, &rtvDesc,
+		m_pDescriptorHeap_RTV->GetCpuHandle((UINT)DescriptorHeapList_RTV::eEmissive));
 
 	device->CreateRenderTargetView(
 		pNormal, &rtvDesc,
@@ -287,7 +311,7 @@ void HRasterize::CreateDescriptorHeap()
 			(UINT)DescriptorHeapList_RTV::TotalCount);
 
 	m_pDescriptorHeap_SRV =
-		std::make_unique<DescriptorHeap>(device, (UINT)SRVUAVDescriptorHeapOffset_Rasterize::MaxCount);
+		std::make_unique<DescriptorHeap>(device, (UINT)SRVUAVDescriptorHeapOffset_Rasterize::TotalCount);
 
 	m_pDescriptorHeap_DSV =
 		std::make_unique<DescriptorHeap>(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
@@ -299,21 +323,26 @@ void HRasterize::CreateRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE texTable;
 	texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_MATERIAL_DESCRIPTORHEAP_SIZE, 0, 0);
 
+	CD3DX12_DESCRIPTOR_RANGE colorChipTable;
+	colorChipTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, COLORCHIP_TEXTURECOUNT, 0, 2);
+
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[(UINT)RootSig_Rasterize::MaxCount];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[(UINT)RootSig_Rasterize::TotalCount];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[(UINT)RootSig_Rasterize::StructuredBuffer_instances].InitAsShaderResourceView(0, 1);
 	slotRootParameter[(UINT)RootSig_Rasterize::StructuredBuffer_instancesBones].InitAsShaderResourceView(1, 1);
 	slotRootParameter[(UINT)RootSig_Rasterize::StructuredBuffer_perPSO].InitAsShaderResourceView(2, 1);
-	slotRootParameter[(UINT)RootSig_Rasterize::ConstantBuffer_perModel].InitAsConstantBufferView(0);
-	slotRootParameter[(UINT)RootSig_Rasterize::ConstantBuffer_pass].InitAsConstantBufferView(1);
+	slotRootParameter[(UINT)RootSig_Rasterize::ConstantBuffer_perModel].InitAsConstantBufferView(1);
+	slotRootParameter[(UINT)RootSig_Rasterize::ConstantBuffer_pass].InitAsConstantBufferView(0);
 	slotRootParameter[(UINT)RootSig_Rasterize::Textures].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_ALL);
+	slotRootParameter[(UINT)RootSig_Rasterize::ColorChip].InitAsDescriptorTable(1, &colorChipTable, D3D12_SHADER_VISIBILITY_ALL);
+
 
 	auto staticSamplers = d3dUtil::GetStaticSamplers();
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc((UINT)RootSig_Rasterize::MaxCount, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc((UINT)RootSig_Rasterize::TotalCount, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -358,8 +387,7 @@ void HRasterize::CreatePSOs()
 	shadowRasterDesc.DepthBiasClamp = 0.0f;
 	shadowRasterDesc.SlopeScaledDepthBias = 5.0f;
 
-
-	for (unsigned char i = 0; i <= ALLOPTION_PSO; i++)
+	for (const PSOTYPE& psoType : PSOTYPE())
 	{
 		DXGI_SAMPLE_DESC sampleDesc = {};
 		D3D12_RASTERIZER_DESC rasterDesc = {};
@@ -369,91 +397,46 @@ void HRasterize::CreatePSOs()
 		D3D12_SHADER_BYTECODE HS_ = {};
 		D3D12_SHADER_BYTECODE DS_ = {};
 
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType;
-
-		/*if ((i & MSAA_PSO) != 0)
-			sampleDesc = msaaSampleDesc;
-		else
-			sampleDesc = nonMsaaSampleDesc;*/
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType =
+			D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
 		sampleDesc = nonMsaaSampleDesc;
 
-		if ((i & WIREFRAME_PSO) != 0)
-			rasterDesc = wireframeRasterDesc;
-		else
+		switch (psoType)
+		{
+		case PSOTYPE::DEFAULT:
+			VS_.pShaderBytecode = g_pdefault_VS;
+			VS_.BytecodeLength = sizeof(g_pdefault_VS);
+			PS_.pShaderBytecode = g_pdefault_PS_deffered;
+			PS_.BytecodeLength = sizeof(g_pdefault_PS_deffered);
 			rasterDesc = nonWireframeRasterDesc;
-
-		if ((i & (TWOMAT_PSO | TESS_PSO)) == (TWOMAT_PSO | TESS_PSO))
-		{
-			VS_.pShaderBytecode = g_ptess_VS;
-			VS_.BytecodeLength = sizeof(g_ptess_VS);
-
-			//PS_.pShaderBytecode = g_ptwoMatLerp_PS;
-			//PS_.BytecodeLength = sizeof(g_ptwoMatLerp_PS);
-
-			PS_.pShaderBytecode = g_ptwoMatLerp_PS_deffered;
-			PS_.BytecodeLength = sizeof(g_ptwoMatLerp_PS_deffered);
-
-			HS_.pShaderBytecode = g_pdefault_HS;
-			HS_.BytecodeLength = sizeof(g_pdefault_HS);
-
-			DS_.pShaderBytecode = g_ptwoMatLerp_DS;
-			DS_.BytecodeLength = sizeof(g_ptwoMatLerp_DS);
-
-			primitiveType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-		}
-		else if ((i & (TWOMAT_PSO | TESS_PSO)) == TESS_PSO)
-		{
-			VS_.pShaderBytecode = g_ptess_VS;
-			VS_.BytecodeLength = sizeof(g_ptess_VS);
-
-			/*PS_.pShaderBytecode = g_pdefault_PS;
-			PS_.BytecodeLength = sizeof(g_pdefault_PS);*/
-
-			PS_.pShaderBytecode = g_pdefault_PS_deffered;
-			PS_.BytecodeLength = sizeof(g_pdefault_PS_deffered);
-
-			HS_.pShaderBytecode = g_pdefault_HS;
-			HS_.BytecodeLength = sizeof(g_pdefault_HS);
-
-			DS_.pShaderBytecode = g_pdefault_DS;
-			DS_.BytecodeLength = sizeof(g_pdefault_DS);
-
-			primitiveType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-		}
-		else if ((i & (TWOMAT_PSO | TESS_PSO)) == TWOMAT_PSO)
-		{
+			break;
+		case PSOTYPE::COLORCHIP:
 			VS_.pShaderBytecode = g_pdefault_VS;
 			VS_.BytecodeLength = sizeof(g_pdefault_VS);
-
-			//PS_.pShaderBytecode = g_ptwoMatLerp_PS;
-			//PS_.BytecodeLength = sizeof(g_ptwoMatLerp_PS);
-
-			PS_.pShaderBytecode = g_ptwoMatLerp_PS_deffered;
-			PS_.BytecodeLength = sizeof(g_ptwoMatLerp_PS_deffered);
-
-			primitiveType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-		else
-		{
+			PS_.pShaderBytecode = g_pcolorChip_PS_deffered;
+			PS_.BytecodeLength = sizeof(g_pcolorChip_PS_deffered);
+			rasterDesc = nonWireframeRasterDesc;
+			break;
+		case PSOTYPE::WIREFRAME:
 			VS_.pShaderBytecode = g_pdefault_VS;
 			VS_.BytecodeLength = sizeof(g_pdefault_VS);
-
-			//PS_.pShaderBytecode = g_pdefault_PS;
-			//PS_.BytecodeLength = sizeof(g_pdefault_PS);
-
 			PS_.pShaderBytecode = g_pdefault_PS_deffered;
 			PS_.BytecodeLength = sizeof(g_pdefault_PS_deffered);
+			rasterDesc = wireframeRasterDesc;
+			break;
 
-			primitiveType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+		default:
+			break;
 		}
-		CreatePSO(VS_, PS_, HS_, DS_, primitiveType, sampleDesc, rasterDesc, m_PSOs[i].GetAddressOf());
+
+		CreatePSO(VS_, PS_, HS_, DS_, primitiveType, sampleDesc, rasterDesc, m_PSO_default[psoType].GetAddressOf());
 	}
 
 	D3D12_SHADER_BYTECODE VS_shadow;
 	VS_shadow.pShaderBytecode = g_pshadow_VS;
 	VS_shadow.BytecodeLength = sizeof(g_pshadow_VS);
-
 
 	CreateShadowBufferPSO(VS_shadow, nonMsaaSampleDesc, shadowRasterDesc, &m_shadowPSO);
 }
@@ -536,6 +519,8 @@ void HRasterize::CreatePSO(D3D12_SHADER_BYTECODE VS, D3D12_SHADER_BYTECODE PS, D
 	PsoDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	PsoDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	PsoDesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	PsoDesc.RTVFormats[3] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
 	PsoDesc.SampleDesc = sampleDesc;
 	PsoDesc.DSVFormat = depthBufferFormat;
 

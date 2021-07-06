@@ -127,6 +127,23 @@ HAnimFormat* HSelfFormatReader::ReadHAnimFile(const char* file)
 
 	readFile.close();
 
+
+	std::size_t snailPos = fileName.rfind("@");
+	if (snailPos == std::string::npos)
+	{
+		throw;
+	}
+
+	std::size_t hanimPos = fileName.rfind(".hanim");
+	if (hanimPos == std::string::npos)
+	{
+		throw;
+	}
+
+	std::string animName = fileName.substr(snailPos + 1, hanimPos - snailPos - 1);
+
+	memcpy(m_curruntHAnim->header.name, animName.data(), 256);
+
 	return m_curruntHAnim;
 }
 
