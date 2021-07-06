@@ -326,11 +326,6 @@ public:
 	void SetCamera(Camera camera);
 	Camera* GetCamera();
 
-	//get DirectXTK input
-	//DirectX::Keyboard* GetKeyboard();
-	//DirectX::GamePad* GetGamePad();
-	//DirectX::Mouse* GetMouse();
-
 	//output debug string, must be called everyframe. internaly saved in deque.
 	void AddDebugString(DebugString debugString);
 

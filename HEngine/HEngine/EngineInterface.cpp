@@ -84,30 +84,6 @@ Camera* HEngine_DX12_3D::GetCamera()
 	return m_pHEngine->GetCamera();
 }
 
-//DirectX::Keyboard* HEngine_DX12_3D::GetKeyboard()
-//{
-//	if (m_pHEngine == nullptr)
-//		throw;
-//
-//	return m_pHEngine->GetKeyboard();
-//}
-//
-//DirectX::GamePad* HEngine_DX12_3D::GetGamePad()
-//{
-//	if (m_pHEngine == nullptr)
-//		throw;
-//
-//	return m_pHEngine->GetGamePad();
-//}
-//
-//DirectX::Mouse* HEngine_DX12_3D::GetMouse()
-//{
-//	if (m_pHEngine == nullptr)
-//		throw;
-//
-//	return m_pHEngine->GetMouse();
-//}
-
 void HEngine_DX12_3D::AddDebugString(DebugString debugString)
 {
 	if (m_pHEngine == nullptr)

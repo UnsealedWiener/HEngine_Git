@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\Lib\HEngine\library_and_resources\Library\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\Output\$(ProjectName)\$(OutputType)\$(Configuration)\</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\Lib\HEngine\library_and_resources\Library\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\Output\$(ProjectName)\$(OutputType)\$(Configuration)\</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -61,7 +61,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDIr)Library\Library_Code;$(ProjectDIr)Library\Library_Proj\DirectXTK\DirectXTK12-sept2020\Inc;$(ProjectDir)Library\Library_Lib\FBX SDK\2020.1\include\;$(ProjectDir)Shaders\CompiledShaders\$(Configuration)\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDIr)Library\Library_Code;$(ProjectDIr)..\Dependency\DirectXTK\DirectXTK12-sept2020\Inc;$(ProjectDir)..\Dependency\FBX SDK\2020.1\include\;$(ProjectDir)Shaders\CompiledShaders\$(Configuration)\</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -91,7 +91,7 @@ copy /Y "$(ProjectDir)Camera.h" "$(OutDir)..\Camera.h"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDIr)Library\Library_Code;$(ProjectDIr)Library\Library_Proj\DirectXTK\DirectXTK12-sept2020\Inc;$(ProjectDir)Library\Library_Lib\FBX SDK\2020.1\include\;$(ProjectDir)Shaders\CompiledShaders\$(Configuration)\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDIr)Library\Library_Code;$(ProjectDIr)..\Dependency\DirectXTK\DirectXTK12-sept2020\Inc;$(ProjectDir)..\Dependency\FBX SDK\2020.1\include\;$(ProjectDir)Shaders\CompiledShaders\$(Configuration)\</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

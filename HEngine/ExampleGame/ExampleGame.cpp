@@ -1,5 +1,17 @@
+#include "pch.h"
 #include "ExampleGame.h"
 #include<DirectXColors.h>
+
+ExampleGame* g_pExampleGame = nullptr;
+
+ExampleGame* ExampleGame::GetInstance()
+{
+	if (g_pExampleGame == nullptr)
+	{
+		g_pExampleGame = new ExampleGame;
+	}
+	return g_pExampleGame;
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -11,8 +23,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
-	case WM_CREATE:
+	
 	case WM_CLOSE:
+		DestroyWindow(hWnd);
+	case WM_CREATE:
 	case WM_DEVICECHANGE:
 	case WM_PAINT:
 	case WM_SIZE:
@@ -21,6 +35,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_GETMINMAXINFO:
 	case WM_ACTIVATEAPP:
 	case WM_POWERBROADCAST:
+		break;
 	case WM_INPUT:
 	case WM_MOUSEMOVE:
 	case WM_LBUTTONDOWN:
@@ -33,10 +48,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_XBUTTONDOWN:
 	case WM_XBUTTONUP:
 	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
 	case WM_SYSKEYDOWN:
+		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 
 	case WM_DESTROY:
@@ -158,23 +176,23 @@ void ExampleGame::OutputDebugString()
 
 	debugString.color = bReflection ? Colors::DarkOrange : Colors::DarkGray;
 	debugString.message = strRaytracing + (bReflection ? "On" : "Off");
-	debugString.posX = startPosX;
-	debugString.posY = startPosY;
+	debugString.pos.x = startPosX;
+	debugString.pos.y = startPosY;
 	m_p3DgraphicEngine->AddDebugString(debugString);
 
 	debugString.color = bShadow ? Colors::DarkOrange : Colors::DarkGray;
 	debugString.message = strShadowMap + (bShadow ? "On" : "Off");
-	debugString.posY += 30.f;
+	debugString.pos.y += 30.f;
 	m_p3DgraphicEngine->AddDebugString(debugString);
 
 	debugString.color = bSsao ? Colors::DarkOrange : Colors::DarkGray;
 	debugString.message = strSSAO + (bSsao ? "On" : "Off");
-	debugString.posY += 30.f;
+	debugString.pos.y += 30.f;
 	m_p3DgraphicEngine->AddDebugString(debugString);
 
 	debugString.color = Color(0.5f, 0.5f, 0.5f);
 	debugString.message = "MoveCamera : W/A/S/D & Mouse Left Click";
-	debugString.posY += 30.f;
+	debugString.pos.y += 30.f;
 	m_p3DgraphicEngine->AddDebugString(debugString);
 }
 
@@ -214,8 +232,30 @@ void ExampleGame::CameraControl(float dTime)
 			camera->Pitch(dy);
 			camera->RotateY(dx);
 		}
-
 	}
+}
+
+void ExampleGame::Loop()
+{
+	float dTime = m_p3DgraphicEngine->GetElapsedTime();
+
+	m_pMyCharacter->animationTime += dTime;
+
+	m_keyboardTracker.Update(m_keyboard->GetState());
+	m_mouseTracker.Update(m_pMouse->GetState());
+
+
+	CameraControl(dTime);
+	OutputDebugString();
+
+	m_p3DgraphicEngine->Loop();
+}
+
+void ExampleGame::Finalize()
+{
+	m_p3DgraphicEngine->EndEngine();
+	delete g_pExampleGame;
+	g_pExampleGame = nullptr;
 }
 
 void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHeight)
@@ -225,8 +265,8 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	//graphic initialize
 	m_p3DgraphicEngine = HEngine_DX12_3D::GetInstance();
 	m_p3DgraphicEngine->InitEngine(hWnd, clientWidth, clientHeight);
-	m_keyboard = m_p3DgraphicEngine->GetKeyboard();
-	m_pMouse = m_p3DgraphicEngine->GetMouse();
+	m_keyboard = std::make_unique<Keyboard>();
+	m_pMouse = std::make_unique<Mouse>();
 
 	//그래픽 자원을 만들 때 StartSetting을 호출
 	//그래픽 카드에 여러 명령을 한번에 보내주기 위함
@@ -242,7 +282,6 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 
 	std::vector<std::string> animList;
 	animList.push_back("../Media/Model/Crunch/Crunch@idle.hanim");
-	animList.push_back("../Media/Model/Crunch/Crunch@attack01.hanim");
 
 	HAnimData* pHAnim = m_p3DgraphicEngine->CreateAnimationFromHAnimFiles(animList);
 
@@ -251,14 +290,14 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 		L"../Media/Material/spaceShip/spaceShip_metallic.png",
 		L"../Media/Material/spaceShip/spaceShip_ao.png",
 		L"../Media/Material/spaceShip/spaceShip_normal.png",
-		L"../Media/Material/spaceShip/spaceShip_height.png");
+		L"../Media/Material/spaceShip/spaceShip_height.png",nullptr);
 
 	HMaterialData* pHMat_Bamboo = m_p3DgraphicEngine->CreateMaterial(L"../Media/Material/bamboo/bamboo_albedo.png",
 		L"../Media/Material/bamboo/bamboo_roughness.png",
 		L"../Media/Material/bamboo/bamboo_metallic.png",
 		L"../Media/Material/bamboo/bamboo_ao.png",
 		L"../Media/Material/bamboo/bamboo_normal.png",
-		nullptr);
+		nullptr, nullptr);
 
 	//그래픽 자원을 생성하는 명령을 그래픽 카드에 보내줌
 	//이후 모든 명령이 수행될 때까지 기다린다.
@@ -268,36 +307,15 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 
 	m_p3DgraphicEngine->GetCamera()->LookAt(Vector3(0, 500, -500), Vector3(0, 0, 0), Vector3(0, 1, 0));
 
-	m_pMyCharacter = pHModel_Crunch->AddInstance(eNoOption_EI);
+	m_pMyCharacter = pHModel_Crunch->AddInstance(ShaderType::DEFAULT);
 	m_pMyCharacter->SetMaterial(pHMat_Spaceshipt);
 	m_pMyCharacter->animationName = "idle";
 
-	pHModel_Field->AddInstance(eNoOption_EI)->SetMaterial(pHMat_Bamboo);
+	pHModel_Field->AddInstance(ShaderType::DEFAULT)->SetMaterial(pHMat_Bamboo);
 
 	HLightData* pLightData =  m_p3DgraphicEngine->CreateLight(LightType::eDirectLight);
 	pLightData->strength = Vector3(0.7f, 0.7f, 0.7f);
 
 	AddGrid();
 
-}
-
-void ExampleGame::Loop()
-{
-	float dTime = m_p3DgraphicEngine->GetElapsedTime();
-
-	m_pMyCharacter->animationTime += dTime;
-
-	m_keyboardTracker.Update(m_keyboard->GetState());
-	m_mouseTracker.Update(m_pMouse->GetState());
-
-	
-	CameraControl(dTime);
-	OutputDebugString();
-
-	m_p3DgraphicEngine->Loop();
-}
-
-void ExampleGame::Finalize()
-{
-	m_p3DgraphicEngine->EndEngine();
 }
