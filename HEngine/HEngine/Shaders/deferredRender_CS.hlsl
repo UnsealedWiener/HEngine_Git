@@ -68,7 +68,6 @@ SamplerComparisonState gsamShadow : register(s6);
 [numthreads(16, 16, 1)]
 void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 {
-
 	float3 albedo = float3(albedoTexture[dispatchThreadID.xy].xyz);
 	float metallic = metallicRoughnessAOTexture[dispatchThreadID.xy].x;
 	float roughness = metallicRoughnessAOTexture[dispatchThreadID.xy].y;
@@ -175,15 +174,6 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 		float3 Ambient = float3(0.2f, 0.2f, 0.2f) * indirectLighting * ao;
 
 		color = directLighting + pointLighting + spotLighting + Ambient;
-
-		//color = directLighting;
-
-		//float4 eyePos = mul(float4(0, 0, 0, 1), gInvView);
-		//float4 eyeDirection = eyePos - worldCoord;
-
-		//eyeDirection = normalize(eyeDirection);
-		//if (dot(normal, eyeDirection) < 0.1)
-		//	color = float3(1, 0, 0);
 	}
 	else
 	{
