@@ -79,8 +79,6 @@ struct HAnim : public HAnimData
 	void Delete()override;
 };
 
-
-
 struct HInstance : public HInstanceData
 {
 	PSOTYPE m_psoType;					//InstanceType
@@ -159,15 +157,6 @@ struct HSturecturedBuffer_Raytracing_PerNode
 	UINT vertexOffsetInModel;
 	UINT padding[2];
 };
-
-//enum InstanceType
-//{
-//	NOOPTION_MM =	0B00000000,
-//	TWOMAT_MM	=	0B00000001,
-//	TESS_MM		=	0B00000010,
-//	WIREFRAME_MM = 0B00000100,
-//	ALLOPTION_MM   = TWOMAT_MM| TESS_MM | WIREFRAME_MM
-//};
 
 enum class RootSig_Compute
 {

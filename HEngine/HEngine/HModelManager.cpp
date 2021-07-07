@@ -19,20 +19,12 @@ void HModelManager::Initialize(DeviceResources* pDeviceResources, GraphicsMemory
 	m_pGraphicMemory = pGraphicMemory;
 	m_pCamera = pCamera;
 
-	//m_pTopLevelAccelerationStructures.resize(m_pDeviceResources->GetBackBufferCount());
-	//m_pTopLevelAccelerationStructureScratches.resize(m_pDeviceResources->GetBackBufferCount());
-	//m_pRaytracingInstanceDescs.resize(m_pDeviceResources->GetBackBufferCount());
-	
-	//m_pAllInstacedVertices.resize(m_pDeviceResources->GetBackBufferCount());
-
 	CreateComputeRootSignature();
 	CreateComputePSO_lightCalculation();
 }
 
 HModelData* HModelManager::CreateModelFromFbxFile(std::string fbxName, ResourceUploadBatch& resourceBatch)
 {
-	//CreateModelFromHModelFile("Media/Model/Crunch/Crunch_LOD4.hmodel", resourceBatch);
-
 	if (fbxName.empty())
 	{
 		HerrorMessage(L"The fbxFiles name is empty.")
@@ -62,7 +54,6 @@ HAnimData* HModelManager::CreateAnimationFromFbxFiles(std::vector<std::string> f
 
 	std::shared_ptr<HAnim> pAnim = std::make_shared<HAnim>();
 	
-
 	for (int i = 0; i < fbxNames.size(); i++)
 	{
 		std::unique_ptr<HFbxImporter> pFbxImporter = std::make_unique<HFbxImporter>();
@@ -569,16 +560,13 @@ void HModelManager::CheckInstanceAlive()
 		}
 		else
 		{
-			//if()
-			//if (pInstance.get()->pMat.expired()|| pInstance.get()->pMatSecond.expired())
-			//	toBeDeletedList_temp.push_back(e.first);
+			
 		}
 	}
 
 	for (auto& e : toBeDeletedList)
 	{
 		m_instances.erase(e);
-		m_bInstanceDirty = true;
 	}
 }
 
@@ -1413,20 +1401,9 @@ void HModelManager::CreateVertexBuffer_raytracing(unsigned int vertexCount)
 	CD3DX12_RESOURCE_DESC DXRDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexCount * sizeof(HVertex_raytracing));
 	DXRDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
-	pBufferManager->CreateDefaultHeapBuffer_device0(pDevice, DXRDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, m_pAllInstacedVertices);
+	pBufferManager->CreateDefaultHeapBuffer_device0(pDevice, DXRDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, m_pAllDynamicInstacedVertices);
 
-	m_pAllInstacedVertices->SetName(L"VertexData_raytracing");
-
-	//DX::ThrowIfFailed(pDevice->CreateCommittedResource(
-	//	&heapProperties,
-	//	D3D12_HEAP_FLAG_NONE,
-	//	&DXRDesc,
-	//	D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,//나중에 UAV로 바꿔줄거임
-	//	nullptr,
-	//	IID_PPV_ARGS(m_pAllInstacedVertices[currentFrame].ReleaseAndGetAddressOf())
-	//));
-
-	//m_pAllInstacedVertices[currentFrame]->SetName(L"VertexData_raytracing");
+	m_pAllDynamicInstacedVertices->SetName(L"VertexData_raytracing");
 }
 
 void HModelManager::CreatePerDynamicModelDataForComputeShader()
@@ -1473,10 +1450,10 @@ void HModelManager::UpdateVertexBuffer_raytracing(ID3D12GraphicsCommandList* cmd
 {
 	unsigned int currentFrameIndex = m_pDeviceResources->GetCurrentFrameIndex();
 
-	if (m_pAllInstacedVertices.Get() == nullptr)
+	if (m_pAllDynamicInstacedVertices.Get() == nullptr)
 		return;
 
-	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pAllInstacedVertices.Get(),
+	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pAllDynamicInstacedVertices.Get(),
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	cmdList->ResourceBarrier(1, &barrier);
 
@@ -1488,7 +1465,7 @@ void HModelManager::UpdateVertexBuffer_raytracing(ID3D12GraphicsCommandList* cmd
 		m_allVerticesResource->GetGPUVirtualAddress());
 
 	cmdList->SetComputeRootUnorderedAccessView((UINT)RootSig_Compute::StructuredBuffer_VertexOutput,
-		m_pAllInstacedVertices->GetGPUVirtualAddress());
+		m_pAllDynamicInstacedVertices->GetGPUVirtualAddress());
 
 	//버텍스 숫자 모델마다 유동적
 	//모델마다 인스턴스 숫자 유동적
@@ -1507,9 +1484,6 @@ void HModelManager::UpdateVertexBuffer_raytracing(ID3D12GraphicsCommandList* cmd
 
 		for (auto& k : pHModel->visibleInstances)
 		{
-			/*std::unordered_map<void*, std::shared_ptr<HInstance>>& instanceList
-				= k.second;*/
-
 			std::vector<HInstance*>& instanceList = k.second;
 
 			numGroupsY += instanceList.size();
@@ -1527,16 +1501,11 @@ void HModelManager::UpdateVertexBuffer_raytracing(ID3D12GraphicsCommandList* cmd
 		cmdList->SetComputeRootShaderResourceView((UINT)RootSig_Compute::StructuredBuffer_BoneTM,
 			pHModel->structuredBuffer_computeShader_boneTMs.GpuAddress());
 
-		//cmdList->SetComputeRootShaderResourceView((UINT)RootSig_Compute::StructuredBuffer_BoneTM,
-		//	pHModel->structuredBuffer_bones[0].GpuAddress());
-
-
-
 		cmdList->Dispatch(numGroupsX, numGroupsY, 1);
-
+		 
 	}
 
-	barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pAllInstacedVertices.Get(),
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_pAllDynamicInstacedVertices.Get(),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	cmdList->ResourceBarrier(1, &barrier);
 
@@ -1639,11 +1608,11 @@ void HModelManager::UpdateRaytracingBottomLevelAccelerationStructure_raytracing(
 {
 	unsigned int currentFrame = m_pDeviceResources->GetCurrentFrameIndex();
 
-	if (m_pAllInstacedVertices.Get() == nullptr)
+	if (m_pAllDynamicInstacedVertices.Get() == nullptr)
 		return;
 
 	D3D12_GPU_VIRTUAL_ADDRESS dynamicVertexOffset = dynamicVertexOffset
-		= m_pAllInstacedVertices->GetGPUVirtualAddress();
+		= m_pAllDynamicInstacedVertices->GetGPUVirtualAddress();
 
 	for (auto& model : m_models)
 	{
@@ -1900,8 +1869,6 @@ void HModelManager::UpdateRaytracingTopLevelAccelerationStructure_raytracing(ID3
 		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
 		nullptr,
 		IID_PPV_ARGS(m_pTopLevelAccelerationStructures[currentFrame].ReleaseAndGetAddressOf()));*/
-
-
 
 	//CommandList 인터페이스를 이용해서 가속화 구조체를 작성
 

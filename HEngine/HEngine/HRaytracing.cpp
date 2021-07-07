@@ -921,9 +921,9 @@ void HRaytracing::UpdateShaderBindingTable()
 
 		parameter1.RootParameters[(UINT)LocalRootSig_Hit0::eStaticVertexBuffer] =
 			m_pModelManager->m_allVerticesResource->GetGPUVirtualAddress();
-		if(m_pModelManager->m_pAllInstacedVertices)
+		if(m_pModelManager->m_pAllDynamicInstacedVertices)
 		parameter1.RootParameters[(UINT)LocalRootSig_Hit0::eDynamicVertexBuffer] =
-			m_pModelManager->m_pAllInstacedVertices->GetGPUVirtualAddress();
+			m_pModelManager->m_pAllDynamicInstacedVertices->GetGPUVirtualAddress();
 		parameter1.RootParameters[(UINT)LocalRootSig_Hit0::eIndexBuffer] =
 			m_pModelManager->m_allIndicesResource->GetGPUVirtualAddress();
 		parameter1.RootParameters[(UINT)LocalRootSig_Hit0::eLight] =
@@ -949,9 +949,9 @@ void HRaytracing::UpdateShaderBindingTable()
 
 		parameter2.RootParameters[(UINT)LocalRootSig_Hit1::eStaticVertexBuffer] =
 			m_pModelManager->m_allVerticesResource->GetGPUVirtualAddress();
-		if (m_pModelManager->m_pAllInstacedVertices)
+		if (m_pModelManager->m_pAllDynamicInstacedVertices)
 		parameter2.RootParameters[(UINT)LocalRootSig_Hit1::eDynamicVertexBuffer] =
-			m_pModelManager->m_pAllInstacedVertices->GetGPUVirtualAddress();
+			m_pModelManager->m_pAllDynamicInstacedVertices->GetGPUVirtualAddress();
 		parameter2.RootParameters[(UINT)LocalRootSig_Hit1::eIndexBuffer] =
 			m_pModelManager->m_allIndicesResource->GetGPUVirtualAddress();
 		parameter2.RootParameters[(UINT)LocalRootSig_Hit1::eLight] =
