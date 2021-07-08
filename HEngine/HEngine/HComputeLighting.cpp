@@ -35,6 +35,7 @@ void HComputeLighting::CreateDesciptors_lightCalculation(ID3D12Resource* pAlbedo
 	ID3D12Resource* pScene)
 {
 	auto device = m_pDeviceResources->GetD3DDevice();
+	
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
 
@@ -153,7 +154,7 @@ void HComputeLighting::ComputeLighting()
 	commandList->SetComputeRootShaderResourceView((UINT)RootSignatureList_lightCalculation::eLight,
 		m_pPassConstant->GetLightGpyAddress());
 
-
+\
 	RECT outputSize = m_pDeviceResources->GetOutputSize();
 
 	UINT numGroupX = (UINT)ceilf((outputSize.right - outputSize.left) / 16.0f);

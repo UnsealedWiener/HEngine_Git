@@ -64,6 +64,9 @@
     <Filter Include="Source\MainEngine\HGraphicPipeline\WaveEffect">
       <UniqueIdentifier>{33907aaa-9d39-4653-a3b8-ef814ac99652}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Other\SHMath">
+      <UniqueIdentifier>{ae17dadb-4380-4e51-8706-fbdf7fecc678}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -146,6 +149,15 @@
     </ClCompile>
     <ClCompile Include="HPostProcess.cpp">
       <Filter>Source\MainEngine\HGraphicPipeline\HPostProcess</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXSH.cpp">
+      <Filter>Source\Other\SHMath</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXSHD3D11.cpp">
+      <Filter>Source\Other\SHMath</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXSHD3D12.cpp">
+      <Filter>Source\Other\SHMath</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +265,9 @@
     </ClInclude>
     <ClInclude Include="HPostProcessDefines.h">
       <Filter>Source\MainEngine\HGraphicPipeline\HPostProcess</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXSH.h">
+      <Filter>Source\Other\SHMath</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
