@@ -317,7 +317,6 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 
 	m_pMyCharacter->worldTM = mat0;
 
-
 	HInstanceData* pField = pHModel_Field->AddInstance(ShaderType::DEFAULT);
 	pField->SetMaterial(pHMat_Spaceshipt);
 	Matrix mat1;
@@ -325,9 +324,7 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	mat1._11 = 2;
 	mat1._33 = 2;
 
-
 	pField->worldTM = mat1;
-
 
 	HLightData* pLightData =  m_p3DgraphicEngine->CreateLight(LightType::eDirectLight);
 	pLightData->strength = Vector3(0.7f, 0.7f, 0.7f);
