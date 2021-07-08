@@ -47,7 +47,7 @@ HEngine은 정적 라이브러리로 빌드됩니다. 아래 설명대로 사용
 
 2.  Output/HEngine/staticlibrary 경로에 있는 헤더 파일들을 게임 프로젝트에 추가합니다.
 
-3. 만약 DirectXTK의 마우스, 키보드, 게임패드를 사용하기 원하신다면 "DirectXTKHeaders"폴더에 있는 헤더 역시 프로젝트에 추가해줍니다.
+3. 만약 DirectXTK의 마우스, 키보드, 게임패드를 사용하기 원하신다면 "Dependency\DirectXTK\DirectXTK12-sept2020\Inc"폴더에 있는 헤더 역시 프로젝트에 추가해줍니다.
 
 4. 추가 종속성에 HEngine.lib를 추가해줍니다.
 
@@ -114,7 +114,7 @@ Simple example of a game and using HEngine and resources are in ExampleGame proj
 
 2. Add the header files created in Output/HEngine/staticlibrary to your game project.
 
-3. If you want to use DirectXTK mouse, keyboard and gamepad, add headers in "DirectXTKHeaders" to your game project as well.
+3. If you want to use DirectXTK mouse, keyboard and gamepad, add headers in "Dependency\DirectXTK\DirectXTK12-sept2020\Inc" to your game project as well.
 
 4. Add HEngine.lib as addtional dependency.
 
