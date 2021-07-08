@@ -30,7 +30,7 @@ HEngine으로 바로 fbx 파일을 로드 할 순 있지만 속도가 느리니 
 
 2. 설치합니다.
 
-3. 설치된 경로에서 "2020.1" 폴더를 찾아  HEngine\Dependency 경로로 넣어줍니다.( 기본 설치 경로는 C:\Program Files\Autodesk\FBX\FBX SDK\2020.1 입니다.)
+3. 설치된 경로에서 "FBX SDK" 폴더를 찾아  HEngine\Dependency 경로로 넣어줍니다.( 기본 설치 경로는 C:\Program Files\Autodesk\FBX\FBX SDK\2020.1 입니다.)
 
 4. HEngine.sln 을 열고 "ExampleGame" 프로젝트를 시작 프로젝트로 선택해서 빌드합니다.(프로젝트에 이미 종속성 세팅이 되어있습니다.)
 
@@ -96,7 +96,7 @@ Hardware requirement for raytracing effect  : AMD Radeon RX 6000 series or Nvidi
 
 2. Install fbx sdk
 
-3. Move the folder named "2020.1" from installed address to HEngine\Dependency
+3. Move the folder named "FBX SDK" from installed address to HEngine\Dependency
 (default installation address is C:\Program Files\Autodesk\FBX\FBX SDK\2020.1)
 
 4. Open HEngine.sln and select the "ExampleGame" as start project and build.(Dependency setting is already done.)
