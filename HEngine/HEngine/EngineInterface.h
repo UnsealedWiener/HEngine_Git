@@ -343,7 +343,7 @@ public:
 	//create Light
 	HLightData* CreateLight(LightType lightType);
 
-	//default : 128, 128, 1.0f, 0.03f, 4.0f, 0.2f 
+	//default : 128, 128, 1.f, 4.0f, 0.2f
 	HWaveData* CreateWave(int m, int n, float dx, float speed, float damping);
 
 	//get client size of the window

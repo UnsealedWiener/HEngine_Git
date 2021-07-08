@@ -306,16 +306,42 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	pHModel_Crunch->SetAnimation(pHAnim);
 
 	m_p3DgraphicEngine->GetCamera()->LookAt(Vector3(0, 500, -500), Vector3(0, 0, 0), Vector3(0, 1, 0));
-
+	m_p3DgraphicEngine->GetCamera()->SetLens(3.141592 * 60 / 180, 1920, 1080, 1, 1500);
 	m_pMyCharacter = pHModel_Crunch->AddInstance(ShaderType::DEFAULT);
-	m_pMyCharacter->SetMaterial(pHMat_Spaceshipt);
+	m_pMyCharacter->SetMaterial(pHMat_Bamboo);
 	m_pMyCharacter->animationName = "idle";
 
-	pHModel_Field->AddInstance(ShaderType::DEFAULT)->SetMaterial(pHMat_Bamboo);
+	Matrix mat0;
+	mat0._43 = 200;
+	mat0._41 = 200;
+
+	m_pMyCharacter->worldTM = mat0;
+
+
+	HInstanceData* pField = pHModel_Field->AddInstance(ShaderType::DEFAULT);
+	pField->SetMaterial(pHMat_Spaceshipt);
+	Matrix mat1;
+	
+	mat1._11 = 2;
+	mat1._33 = 2;
+
+
+	pField->worldTM = mat1;
+
 
 	HLightData* pLightData =  m_p3DgraphicEngine->CreateLight(LightType::eDirectLight);
 	pLightData->strength = Vector3(0.7f, 0.7f, 0.7f);
 
-	AddGrid();
+	HWaveData* pWave = 
+	m_p3DgraphicEngine->CreateWave(256, 256, 1.f, 4.0f, 0.6f);
+	
+	mat1._11 = 5;
+	mat1._42 = -500;
+	mat1._22 = 3;
+	mat1._33 = 5;
+	mat1._41 = 0;
+	mat1._43 = 300;
+	pWave->worldTM = mat1;
+	//AddGrid();
 
 }

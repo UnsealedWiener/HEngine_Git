@@ -153,9 +153,6 @@
     <ClCompile Include="DirectXSH.cpp">
       <Filter>Source\Other\SHMath</Filter>
     </ClCompile>
-    <ClCompile Include="DirectXSHD3D11.cpp">
-      <Filter>Source\Other\SHMath</Filter>
-    </ClCompile>
     <ClCompile Include="DirectXSHD3D12.cpp">
       <Filter>Source\Other\SHMath</Filter>
     </ClCompile>
