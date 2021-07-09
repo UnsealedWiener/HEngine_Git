@@ -168,7 +168,6 @@ void CS(int3 dispatchThreadID : SV_DispatchThreadID)
 
 			// Total ambient lighting contribution.
 			indirectLighting = diffuseIBL + specularIBL;
-
 		}
 
 		float3 Ambient = float3(0.2f, 0.2f, 0.2f) * indirectLighting * ao;
