@@ -37,7 +37,7 @@ void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox
 	auto device = DX::DeviceResources::GetInstance()->GetD3DDevice();
 
 	DirectX::CreateDDSTextureFromFile(device,
-		batch, skybox, m_skybox.ReleaseAndGetAddressOf());
+		batch, skybox, m_skybox.ReleaseAndGetAddressOf(), true);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -48,6 +48,8 @@ void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
 	device->CreateShaderResourceView(m_skybox.Get(), &srvDesc, m_skyboxDescriptorHeap->GetCpuHandle(0));
+
+
 
 	m_bRasterizeDirty = true;
 	m_bRaytracingDirty = true;

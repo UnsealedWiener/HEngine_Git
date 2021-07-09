@@ -273,7 +273,7 @@ void ExampleGame::Initialize(HINSTANCE hInstance, int clientWidth, int clientHei
 	m_p3DgraphicEngine->StartSetting();
 
 	//디폴트 스카이박스 세팅
-	m_p3DgraphicEngine->LoadSkyBox(L"../Media/Skybox/Skybox.dds");
+	m_p3DgraphicEngine->LoadSkyBox(L"../Media/Skybox/Skybox_mipmap.dds");
 	//디폴트 폰트 세팅
 	m_p3DgraphicEngine->LoadFont(L"../Media/Fonts/SegoeUI_18.spritefont");
 

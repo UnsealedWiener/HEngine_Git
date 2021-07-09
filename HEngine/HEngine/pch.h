@@ -65,6 +65,7 @@
 #include <dxgi1_5.h>
 #endif
 
+#include"DirectXSH.h"
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 

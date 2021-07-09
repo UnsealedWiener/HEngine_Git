@@ -31,7 +31,7 @@ HEngine::HEngine()
 		c_minFeatureLevel,
 		DX::DeviceResources::c_AllowTearing | DX::DeviceResources::c_EnableHDR
 	);
-
+	
 	m_pDeviceResources->RegisterDeviceNotify(this);
 	//
 	// In Win32 'classic' DirectX 11, you can create the 'swapchain' backbuffer as a multisample buffer.  Present took care of the
@@ -55,7 +55,7 @@ void HEngine::Initialize(HWND hwnd, int width, int height)
 
 	m_pDeviceResources->CreateDeviceResources();			//디바이스 등의 기본적인 자원들을 생성
 	CreateDeviceDependentResources();						//생성한 디바이스를 통해서 다른 자원들을 생성
-
+	
 	//클라이언트 크기에 따라 변하는 자원들을 생성
 	//해당 크기는 런타임 중에도 변할 수 있다. 그럴 경우 아래 함수를 다시 호출한다.
 	m_pDeviceResources->CreateWindowSizeDependentResources();//스왑체인을 생성
