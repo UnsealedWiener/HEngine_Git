@@ -1,6 +1,9 @@
 #include"pch.h"
 #include"ExampleGame.h"
 
+
+
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	PSTR cmdLine, int showCmd)
 {

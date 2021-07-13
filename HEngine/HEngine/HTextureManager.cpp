@@ -2,6 +2,7 @@
 #include"HTextureManager.h"
 #include"d3dUtil.h"
 #include"DeviceResources.h"
+#include"HIrradianceMapGenerator.h"
 
 HTextureManager* HTextureManager::GetInstance()
 {
@@ -11,6 +12,8 @@ HTextureManager* HTextureManager::GetInstance()
 
 void HTextureManager::Initialize(ID3D12Device* device)
 {
+	m_pIrradianceMapGenerator = HIrradianceMapGenerator::GetInstance();
+
 	m_materialDescriptorHeap = std::make_unique<DirectX::DescriptorHeap>(device,
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		MAX_MATERIAL_DESCRIPTORHEAP_SIZE);
@@ -38,6 +41,13 @@ void HTextureManager::LoadSkybox(ResourceUploadBatch& batch, const WCHAR* skybox
 
 	DirectX::CreateDDSTextureFromFile(device,
 		batch, skybox, m_skybox.ReleaseAndGetAddressOf(), true);
+
+	/*
+	Microsoft::WRL::ComPtr<ID3D12Resource> tempResource;
+
+	m_pIrradianceMapGenerator->GenerateIrradianceMapFromCubeMap(tempResource
+		, device , batch, m_skybox.Get());
+		*/
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

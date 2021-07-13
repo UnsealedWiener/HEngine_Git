@@ -156,6 +156,9 @@
     <ClCompile Include="DirectXSHD3D12.cpp">
       <Filter>Source\Other\SHMath</Filter>
     </ClCompile>
+    <ClCompile Include="HIrradianceMapGenerator.cpp">
+      <Filter>Source\MainEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -266,6 +269,9 @@
     <ClInclude Include="DirectXSH.h">
       <Filter>Source\Other\SHMath</Filter>
     </ClInclude>
+    <ClInclude Include="HIrradianceMapGenerator.h">
+      <Filter>Source\MainEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\SkinAnim_Raytracing.hlsl">
@@ -362,6 +368,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\verticalBlur_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\irradianceMapGenetate.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

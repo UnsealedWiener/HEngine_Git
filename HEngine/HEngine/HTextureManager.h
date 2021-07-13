@@ -47,6 +47,8 @@ struct HSprite : public HSpriteData
 	void Delete()override;
 };
 
+class HIrradianceMapGenerator;
+
 
 struct HTextureManager
 {
@@ -54,6 +56,8 @@ private:
 	HTextureManager() {};
 
 private:
+
+	HIrradianceMapGenerator* m_pIrradianceMapGenerator;
 	
 	mutable bool m_bRasterizeDirty = false;
 	mutable bool m_bRaytracingDirty = false;
